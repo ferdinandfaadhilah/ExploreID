@@ -906,3 +906,266 @@
   font-weight: 600;
   color: #23966c;
 }
+
+
+/* ================================
+   HIDDEN GEMS SECTION
+================================ */
+
+.hidden-gems-section {
+  padding: 70px 7%;
+  background: #f7f9f7;
+}
+
+.hidden-gems-section .section-top {
+  margin-bottom: 30px;
+}
+
+.hidden-gems-section .section-top h2 {
+  margin-top: 8px;
+}
+
+.hidden-gems-section .section-top p {
+  margin-top: 10px;
+  color: #777;
+  line-height: 1.7;
+}
+
+/* Hidden Gem Badge */
+
+.card-image {
+  position: relative;
+}
+
+.hidden-gem-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+
+  display: inline-flex;
+  align-items: center;
+
+  padding: 7px 12px;
+  border-radius: 30px;
+
+  background: #183d32;
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .hidden-gems-section {
+    padding: 45px 5%;
+  }
+
+  .hidden-gems-section .section-top {
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+
+/* ================================
+   DESTINATION DETAIL IMPROVEMENTS
+================================ */
+
+.destination-detail-page {
+  padding-bottom: 80px;
+}
+
+.detail-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.detail-map-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 20px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.detail-map-link:hover {
+  border-color: #23966c;
+  color: #23966c;
+}
+
+.price-panel small {
+  display: block;
+  margin-top: 8px;
+  color: #777;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* Destination overview */
+
+.destination-info-section {
+  margin-top: 70px;
+}
+
+.destination-info-section .section-top {
+  margin-bottom: 24px;
+}
+
+.destination-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.destination-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.info-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #eaf5ef;
+  color: #23966c;
+  font-size: 21px;
+}
+
+.destination-info-card small {
+  display: block;
+  margin-bottom: 7px;
+  color: #888;
+  font-size: 12px;
+}
+
+.destination-info-card h3 {
+  margin: 0 0 7px;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.destination-info-card p {
+  margin: 0;
+  color: #777;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Before you visit */
+
+.visit-guide-section {
+  margin-top: 70px;
+  padding: 36px;
+  border-radius: 14px;
+  background: #f7f8f6;
+}
+
+.visit-guide-content {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 50px;
+}
+
+.visit-guide-content h2 {
+  margin: 12px 0;
+  font-size: 30px;
+}
+
+.visit-guide-content > div:first-child > p {
+  color: #777;
+  line-height: 1.7;
+}
+
+.visit-guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.visit-guide-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.visit-guide-item > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e5f1e9;
+  color: #23966c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.visit-guide-item strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+.visit-guide-item p {
+  margin: 0;
+  color: #777;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .destination-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .visit-guide-section {
+    padding: 24px;
+  }
+
+  .visit-guide-content {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .visit-guide-content h2 {
+    font-size: 25px;
+  }
+
+  .detail-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .detail-actions .primary-button,
+  .detail-map-link {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+  }
+}

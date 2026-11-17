@@ -1,3 +1,4 @@
+
 import "./App.css";
 import { useEffect, useState } from "react";
 import AuthPage from "./AuthPage";
@@ -105,7 +106,7 @@ function App() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12;
+  const itemsPerPage = 24;
 
   // Favorites
   const [favorites, setFavorites] = useState<number[]>(() => {
@@ -131,6 +132,7 @@ function App() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState("");
+  const [weatherRetry, setWeatherRetry] = useState(0);
 
   // Simpan Favorites
   useEffect(() => {
@@ -206,7 +208,7 @@ function App() {
     fetchWeather();
 
     return () => controller.abort();
-  }, [page, selected]);
+  }, [page, selected, weatherRetry]);
 
   // Filter dan sorting
   const filteredDestinations = destinations
@@ -300,9 +302,12 @@ function App() {
     );
 
     setSelected(item);
+    setWeather(null);
+    setWeatherError("");
     navigate("detail");
   }
 
+  // Destination Card
   function DestinationCard({ item }: { item: Destination }) {
     const saved = favorites.includes(item.id);
 
@@ -341,7 +346,7 @@ function App() {
     );
   }
 
-    if (authLoading) {
+  if (authLoading) {
     return (
       <div className="auth-loading">
         Memeriksa sesi akun...
@@ -424,19 +429,21 @@ function App() {
 
         {page === "home" && (
           <>
+            {/* HERO */}
             <section className="hero">
               <div className="hero-copy">
                 <span className="eyebrow">DISCOVER INDONESIA</span>
 
                 <h1>
-                  Find your next
+                  Explore Indonesia,
                   <br />
-                  <span>adventure.</span>
+                  <span>Beyond the Ordinary.</span>
                 </h1>
 
                 <p>
-                  Discover amazing places, explore new experiences,
-                  and find your next favorite destination across Indonesia.
+                  From breathtaking landscapes to hidden cultural
+                  treasures, discover remarkable places and experiences
+                  across Indonesia.
                 </p>
 
                 <button
@@ -464,6 +471,7 @@ function App() {
               </div>
             </section>
 
+            {/* EXPLORE DESTINATIONS */}
             <section className="explore-section" id="explore">
               <div className="section-top">
                 <div>
@@ -631,8 +639,9 @@ function App() {
           </>
         )}
 
+        {/* DESTINATION DETAIL */}
         {page === "detail" && selected && (
-          <section className="inner-page">
+          <section className="inner-page destination-detail-page">
             <button
               className="back-button"
               onClick={() => navigate("home")}
@@ -656,20 +665,140 @@ function App() {
                 <div className="price-panel">
                   <span>Estimated price</span>
                   <strong>{selected.price}</strong>
+                  <small>
+                    Estimasi biaya dapat berubah sesuai kebijakan
+                    pengelola dan kebutuhan perjalanan.
+                  </small>
                 </div>
 
-                <button
-                  className="primary-button"
-                  onClick={() => toggleFavorite(selected.id)}
-                >
-                  {favorites.includes(selected.id)
-                    ? "♥ Remove from Favorites"
-                    : "♡ Add to Favorites"}
-                </button>
+                <div className="detail-actions">
+                  <button
+                    className="primary-button"
+                    onClick={() => toggleFavorite(selected.id)}
+                  >
+                    {favorites.includes(selected.id)
+                      ? "♥ Remove from Favorites"
+                      : "♡ Add to Favorites"}
+                  </button>
+
+                  <a
+                    className="detail-map-link"
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      `${selected.name}, ${selected.location}, Indonesia`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open Google Maps ↗
+                  </a>
+                </div>
               </div>
             </div>
 
-            {/* Weather Information */}
+            {/* DESTINATION INFORMATION */}
+            <section className="destination-info-section">
+              <div className="section-top">
+                <div>
+                  <span className="eyebrow">DESTINATION OVERVIEW</span>
+                  <h2>Get to know this place</h2>
+                  <p>
+                    Informasi singkat untuk membantumu mengenal destinasi
+                    sebelum merencanakan perjalanan.
+                  </p>
+                </div>
+              </div>
+
+              <div className="destination-info-grid">
+                <article className="destination-info-card">
+                  <span className="info-card-icon">⌖</span>
+                  <div>
+                    <small>Location</small>
+                    <h3>{selected.location}</h3>
+                    <p>Lokasi destinasi di Indonesia.</p>
+                  </div>
+                </article>
+
+                <article className="destination-info-card">
+                  <span className="info-card-icon">✦</span>
+                  <div>
+                    <small>Category</small>
+                    <h3>{selected.category}</h3>
+                    <p>Kategori pengalaman destinasi ini.</p>
+                  </div>
+                </article>
+
+                <article className="destination-info-card">
+                  <span className="info-card-icon">◷</span>
+                  <div>
+                    <small>Estimated Budget</small>
+                    <h3>{selected.price}</h3>
+                    <p>Perkiraan biaya berdasarkan data ExploreID.</p>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            {/* BEFORE YOU VISIT */}
+            <section className="visit-guide-section">
+              <div className="visit-guide-content">
+                <div>
+                  <span className="eyebrow">TRAVEL CHECKLIST</span>
+                  <h2>Before you visit</h2>
+                  <p>
+                    Beberapa hal yang sebaiknya kamu perhatikan sebelum
+                    berangkat ke {selected.name}.
+                  </p>
+                </div>
+
+                <div className="visit-guide-list">
+                  <div className="visit-guide-item">
+                    <span>01</span>
+                    <div>
+                      <strong>Check the latest information</strong>
+                      <p>
+                        Cari tahu jam operasional, aturan kunjungan,
+                        dan informasi terbaru dari pengelola destinasi.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="visit-guide-item">
+                    <span>02</span>
+                    <div>
+                      <strong>Prepare your travel budget</strong>
+                      <p>
+                        Sesuaikan anggaran dengan biaya perjalanan,
+                        tiket masuk, transportasi, dan kebutuhan lainnya.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="visit-guide-item">
+                    <span>03</span>
+                    <div>
+                      <strong>Check the weather</strong>
+                      <p>
+                        Perhatikan kondisi cuaca agar kamu bisa
+                        mempersiapkan perjalanan dengan lebih baik.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="visit-guide-item">
+                    <span>04</span>
+                    <div>
+                      <strong>Respect the destination</strong>
+                      <p>
+                        Jaga kebersihan, ikuti aturan setempat,
+                        dan hormati lingkungan serta budaya sekitar.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* WEATHER INFORMATION */}
             <section className="weather-section">
               <div className="weather-heading">
                 <div>
@@ -697,14 +826,7 @@ function App() {
                   <p>{weatherError}</p>
                   <button
                     className="weather-retry"
-                    onClick={() => {
-                      setWeather(null);
-                      setPage("home");
-                      setTimeout(() => {
-                        setSelected(selected);
-                        setPage("detail");
-                      }, 0);
-                    }}
+                    onClick={() => setWeatherRetry((prev) => prev + 1)}
                   >
                     Try again
                   </button>
@@ -763,7 +885,8 @@ function App() {
           </section>
         )}
 
-                {page === "favorites" && (
+        {/* FAVORITES */}
+        {page === "favorites" && (
           <section className="inner-page">
             <span className="eyebrow">YOUR COLLECTION</span>
             <h1 className="page-title">My Favorites</h1>
@@ -796,6 +919,7 @@ function App() {
           </section>
         )}
 
+        {/* RECENTLY VIEWED */}
         {page === "recently-viewed" && (
           <section className="inner-page">
             <span className="eyebrow">YOUR ACTIVITY</span>
@@ -837,6 +961,7 @@ function App() {
           </section>
         )}
 
+        {/* PROFILE */}
         {page === "profile" && (
           <section className="profile-page">
             <div className="profile-card">
@@ -900,6 +1025,7 @@ function App() {
           </section>
         )}
 
+        {/* MAP */}
         {page === "map" && (
           <section className="inner-page">
             <span className="eyebrow">DISCOVER BY LOCATION</span>
@@ -947,6 +1073,7 @@ function App() {
           </section>
         )}
 
+        {/* FOR YOU */}
         {page === "for-you" && (
           <section className="inner-page">
             <span className="eyebrow">MADE FOR YOUR JOURNEY</span>
