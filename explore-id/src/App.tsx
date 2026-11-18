@@ -1,8 +1,12 @@
-
 import "./App.css";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AuthPage from "./AuthPage";
 import { useAuth } from "./context/AuthContext";
+import { supabase } from "./lib/supabaseClient";
+import {
+  getUserPreferences,
+  saveUserPreferences,
+} from "./lib/userPreferences";
 
 import {
   MapContainer,
@@ -14,6 +18,10 @@ import { divIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 import { destinations, type Destination } from "./data/destinations";
+import {
+  destinationGuides,
+  defaultDestinationGuide,
+} from "./data/destinationGuides";
 
 type Page =
   | "home"
@@ -33,6 +41,16 @@ type WeatherData = {
   weatherCode: number;
 };
 
+type Review = {
+  id: string;
+  user_id: string;
+  destination_id: number;
+  user_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+};
+
 const categories = [
   "All",
   "Nature",
@@ -49,7 +67,6 @@ const destinationIcon = divIcon({
   iconAnchor: [9, 9],
 });
 
-// Mengubah kode cuaca WMO menjadi deskripsi
 function getWeatherDescription(code: number) {
   if (code === 0) return "Cerah";
   if (code === 1) return "Cerah berawan";
@@ -65,6 +82,7 @@ function getWeatherDescription(code: number) {
   if ([85, 86].includes(code)) return "Hujan salju";
   if (code === 95) return "Badai petir";
   if ([96, 99].includes(code)) return "Badai petir dan hujan es";
+
   return "Kondisi tidak diketahui";
 }
 
@@ -73,11 +91,34 @@ function getWeatherIcon(code: number) {
   if ([1, 2].includes(code)) return "🌤️";
   if ([3, 45, 48].includes(code)) return "☁️";
   if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
-  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code))
-    return "🌧️";
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️";
   if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
   if ([95, 96, 99].includes(code)) return "⛈️";
+
   return "🌡️";
+}
+
+function calculateDistance(
+  first: [number, number],
+  second: [number, number]
+) {
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const earthRadius = 6371;
+
+  const latitudeDifference = toRadians(second[0] - first[0]);
+  const longitudeDifference = toRadians(second[1] - first[1]);
+
+  const a =
+    Math.sin(latitudeDifference / 2) ** 2 +
+    Math.cos(toRadians(first[0])) *
+      Math.cos(toRadians(second[0])) *
+      Math.sin(longitudeDifference / 2) ** 2;
+
+  return (
+    earthRadius *
+    2 *
+    Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  );
 }
 
 function App() {
@@ -104,53 +145,100 @@ function App() {
       .map((part: string) => part[0]?.toUpperCase())
       .join("") || "ME";
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
 
-  // Favorites
   const [favorites, setFavorites] = useState<number[]>(() => {
     try {
       const saved = localStorage.getItem("exploreid-favorites");
-      return saved ? (JSON.parse(saved) as number[]) : [];
+      return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
 
-  // Recently Viewed
   const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
     try {
       const saved = localStorage.getItem("exploreid-recently-viewed");
-      return saved ? (JSON.parse(saved) as number[]) : [];
+      return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
 
-  // Weather
+  const [cloudReady, setCloudReady] = useState(false);
+
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState("");
   const [weatherRetry, setWeatherRetry] = useState(0);
 
-  // Simpan Favorites
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+  const [reviewSuccess, setReviewSuccess] = useState("");
+
+  // LOAD PREFERENCES FROM SUPABASE
   useEffect(() => {
-    localStorage.setItem(
-      "exploreid-favorites",
-      JSON.stringify(favorites)
-    );
+    let active = true;
+
+    async function loadCloudData() {
+      setCloudReady(false);
+
+      if (!user) {
+        setCloudReady(true);
+        return;
+      }
+
+      try {
+        const preferences = await getUserPreferences(user.id);
+
+        if (!active) return;
+
+        setFavorites(preferences.favorites);
+        setRecentlyViewed(preferences.recently_viewed);
+      } catch (error) {
+        console.error("Gagal mengambil preferences:", error);
+      } finally {
+        if (active) {
+          setCloudReady(true);
+        }
+      }
+    }
+
+    loadCloudData();
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  // SAVE LOCAL BACKUP
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "exploreid-favorites",
+        JSON.stringify(favorites)
+      );
+    } catch (error) {
+      console.error("Gagal menyimpan favorite lokal:", error);
+    }
   }, [favorites]);
 
-  // Simpan Recently Viewed
   useEffect(() => {
-    localStorage.setItem(
-      "exploreid-recently-viewed",
-      JSON.stringify(recentlyViewed)
-    );
+    try {
+      localStorage.setItem(
+        "exploreid-recently-viewed",
+        JSON.stringify(recentlyViewed)
+      );
+    } catch (error) {
+      console.error("Gagal menyimpan riwayat lokal:", error);
+    }
   }, [recentlyViewed]);
 
-  // Ambil data cuaca ketika destinasi detail berubah
+  // WEATHER
   useEffect(() => {
     if (page !== "detail" || !selected) return;
 
@@ -210,45 +298,85 @@ function App() {
     return () => controller.abort();
   }, [page, selected, weatherRetry]);
 
-  // Filter dan sorting
-  const filteredDestinations = destinations
-    .filter((item) => {
-      const matchesCategory =
-        category === "All" || item.category === category;
+  // LOAD REVIEWS
+  useEffect(() => {
+    if (page !== "detail" || !selected) return;
 
-      const matchesSearch =
-        item.name.toLowerCase().includes(search.toLowerCase()) ||
-        item.location.toLowerCase().includes(search.toLowerCase());
+    let active = true;
 
-      const matchesLocation =
-        location === "All" || item.location.includes(location);
+    async function loadReviews() {
+      setReviews([]);
+      setReviewError("");
+      setReviewSuccess("");
 
-      const matchesBudget =
-        maxBudget === "All" || item.budget <= Number(maxBudget);
+      const { data, error } = await supabase
+        .from("destination_reviews")
+        .select("*")
+        .eq("destination_id", selected!.id)
+        .order("created_at", { ascending: false });
 
-      return (
-        matchesCategory &&
-        matchesSearch &&
-        matchesLocation &&
-        matchesBudget
-      );
-    })
-    .sort((a, b) => {
-      switch (sortOrder) {
-        case "price-low":
-          return a.budget - b.budget;
-        case "price-high":
-          return b.budget - a.budget;
-        case "name-az":
-          return a.name.localeCompare(b.name, "id");
-        case "name-za":
-          return b.name.localeCompare(a.name, "id");
-        default:
-          return a.id - b.id;
+      if (!active) return;
+
+      if (error) {
+        setReviewError("Review belum dapat dimuat.");
+        console.error("Review:", error.message);
+        return;
       }
-    });
 
-  // Reset pagination saat filter berubah
+      setReviews((data || []) as Review[]);
+    }
+
+    loadReviews();
+
+    return () => {
+      active = false;
+    };
+  }, [page, selected]);
+
+  // FILTER DESTINATIONS
+  const filteredDestinations = useMemo(() => {
+    return destinations
+      .filter((item) => {
+        const matchesCategory =
+          category === "All" || item.category === category;
+
+        const matchesSearch =
+          item.name.toLowerCase().includes(search.toLowerCase()) ||
+          item.location.toLowerCase().includes(search.toLowerCase());
+
+        const matchesLocation =
+          location === "All" || item.location.includes(location);
+
+        const matchesBudget =
+          maxBudget === "All" || item.budget <= Number(maxBudget);
+
+        return (
+          matchesCategory &&
+          matchesSearch &&
+          matchesLocation &&
+          matchesBudget
+        );
+      })
+      .sort((a, b) => {
+        switch (sortOrder) {
+          case "price-low":
+            return a.budget - b.budget;
+
+          case "price-high":
+            return b.budget - a.budget;
+
+          case "name-az":
+            return a.name.localeCompare(b.name, "id");
+
+          case "name-za":
+            return b.name.localeCompare(a.name, "id");
+
+          default:
+            return a.id - b.id;
+        }
+      });
+  }, [category, search, location, maxBudget, sortOrder]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [search, category, location, maxBudget, sortOrder]);
@@ -272,6 +400,32 @@ function App() {
     .map((id) => destinations.find((item) => item.id === id))
     .filter((item): item is Destination => item !== undefined);
 
+  const selectedGuide = selected
+    ? destinationGuides[selected.id] || defaultDestinationGuide
+    : defaultDestinationGuide;
+
+  const nearbyDestinations = useMemo(() => {
+    if (!selected) return [];
+
+    return destinations
+      .filter((item) => item.id !== selected.id)
+      .map((item) => ({
+        item,
+        distance: calculateDistance(
+          selected.position,
+          item.position
+        ),
+      }))
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 3);
+  }, [selected]);
+
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce((total, review) => total + review.rating, 0) /
+        reviews.length
+      : 0;
+
   function navigate(nextPage: Page) {
     setPage(nextPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -288,31 +442,153 @@ function App() {
     navigate("home");
   }
 
-  function toggleFavorite(id: number) {
-    setFavorites((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id]
-    );
+  // TOGGLE FAVORITE AND SYNC WITH SUPABASE
+  async function toggleFavorite(id: number) {
+    if (user && !cloudReady) return;
+
+    const isSaved = favorites.includes(id);
+
+    const nextFavorites = isSaved
+      ? favorites.filter((item) => item !== id)
+      : [...favorites, id];
+
+    setFavorites(nextFavorites);
+
+    if (!user) return;
+
+    try {
+      await saveUserPreferences(user.id, {
+        favorites: nextFavorites,
+        recently_viewed: recentlyViewed,
+      });
+    } catch (error) {
+      console.error("Gagal menyimpan favorite:", error);
+      window.alert("Favorite gagal disimpan ke Supabase.");
+    }
   }
 
-  function openDetail(item: Destination) {
-    setRecentlyViewed((current) =>
-      [item.id, ...current.filter((id) => id !== item.id)].slice(0, 6)
-    );
+  // OPEN DETAIL AND SAVE RECENTLY VIEWED
+  async function openDetail(item: Destination) {
+    const nextRecentlyViewed = [
+      item.id,
+      ...recentlyViewed.filter((id) => id !== item.id),
+    ].slice(0, 6);
+
+    setRecentlyViewed(nextRecentlyViewed);
+
+    if (user && cloudReady) {
+      try {
+        await saveUserPreferences(user.id, {
+          favorites,
+          recently_viewed: nextRecentlyViewed,
+        });
+      } catch (error) {
+        console.error("Gagal menyimpan riwayat:", error);
+      }
+    }
 
     setSelected(item);
     setWeather(null);
     setWeatherError("");
+    setReviews([]);
+    setReviewError("");
+    setReviewSuccess("");
+    setReviewComment("");
+    setReviewRating(5);
+
     navigate("detail");
   }
 
-  // Destination Card
-  function DestinationCard({ item }: { item: Destination }) {
+  // SUBMIT REVIEW
+  async function submitReview() {
+    if (!user) {
+      navigate("login");
+      return;
+    }
+
+    if (!selected) return;
+
+    if (!reviewComment.trim()) {
+      setReviewError("Tulis ulasan terlebih dahulu.");
+      return;
+    }
+
+    setReviewLoading(true);
+    setReviewError("");
+    setReviewSuccess("");
+
+    const userName =
+      user.user_metadata?.full_name ||
+      user.email?.split("@")[0] ||
+      "Explorer";
+
+    const { data, error } = await supabase
+      .from("destination_reviews")
+      .upsert(
+        {
+          user_id: user.id,
+          user_name: userName,
+          destination_id: selected.id,
+          rating: reviewRating,
+          comment: reviewComment.trim(),
+        },
+        {
+          onConflict: "destination_id,user_id",
+        }
+      )
+      .select()
+      .single();
+
+    setReviewLoading(false);
+
+    if (error) {
+      setReviewError("Gagal mengirim review. Coba lagi.");
+      console.error("Review error:", error.message);
+      return;
+    }
+
+    setReviews((current) => {
+      const filtered = current.filter(
+        (review) => review.user_id !== user.id
+      );
+
+      return [data as Review, ...filtered];
+    });
+
+    setReviewComment("");
+    setReviewRating(5);
+    setReviewSuccess("Review berhasil disimpan!");
+  }
+
+  // DELETE REVIEW
+  async function deleteReview(reviewId: string) {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("destination_reviews")
+      .delete()
+      .eq("id", reviewId)
+      .eq("user_id", user.id);
+
+    if (error) {
+      window.alert("Review gagal dihapus.");
+      console.error(error.message);
+      return;
+    }
+
+    setReviews((current) =>
+      current.filter((review) => review.id !== reviewId)
+    );
+
+    setReviewSuccess("Review berhasil dihapus.");
+  }
+
+  // DESTINATION CARD
+  function renderDestinationCard(item: Destination) {
     const saved = favorites.includes(item.id);
 
     return (
-      <article className="destination-card">
+      <article className="destination-card" key={item.id}>
         <div className="card-image">
           <img src={item.image} alt={item.name} />
 
@@ -429,7 +705,6 @@ function App() {
 
         {page === "home" && (
           <>
-            {/* HERO */}
             <section className="hero">
               <div className="hero-copy">
                 <span className="eyebrow">DISCOVER INDONESIA</span>
@@ -471,7 +746,6 @@ function App() {
               </div>
             </section>
 
-            {/* EXPLORE DESTINATIONS */}
             <section className="explore-section" id="explore">
               <div className="section-top">
                 <div>
@@ -518,6 +792,7 @@ function App() {
                   onChange={(event) => setLocation(event.target.value)}
                 >
                   <option value="All">All Locations</option>
+
                   {[...new Set(destinations.map((item) => item.location))]
                     .sort((a, b) => a.localeCompare(b, "id"))
                     .map((place) => (
@@ -567,9 +842,9 @@ function App() {
 
               <div className="destination-grid">
                 {filteredDestinations.length > 0 ? (
-                  currentDestinations.map((item) => (
-                    <DestinationCard key={item.id} item={item} />
-                  ))
+                  currentDestinations.map((item) =>
+                    renderDestinationCard(item)
+                  )
                 ) : (
                   <div className="empty-state">
                     <h3>No destinations found</h3>
@@ -639,7 +914,6 @@ function App() {
           </>
         )}
 
-        {/* DESTINATION DETAIL */}
         {page === "detail" && selected && (
           <section className="inner-page destination-detail-page">
             <button
@@ -695,15 +969,13 @@ function App() {
               </div>
             </div>
 
-            {/* DESTINATION INFORMATION */}
             <section className="destination-info-section">
               <div className="section-top">
                 <div>
                   <span className="eyebrow">DESTINATION OVERVIEW</span>
                   <h2>Get to know this place</h2>
                   <p>
-                    Informasi singkat untuk membantumu mengenal destinasi
-                    sebelum merencanakan perjalanan.
+                    Informasi singkat sebelum merencanakan perjalanan.
                   </p>
                 </div>
               </div>
@@ -738,15 +1010,14 @@ function App() {
               </div>
             </section>
 
-            {/* BEFORE YOU VISIT */}
             <section className="visit-guide-section">
               <div className="visit-guide-content">
                 <div>
-                  <span className="eyebrow">TRAVEL CHECKLIST</span>
-                  <h2>Before you visit</h2>
+                  <span className="eyebrow">TRAVEL GUIDE</span>
+                  <h2>Plan your visit</h2>
                   <p>
-                    Beberapa hal yang sebaiknya kamu perhatikan sebelum
-                    berangkat ke {selected.name}.
+                    Panduan singkat untuk membantu kamu mengenal{" "}
+                    {selected.name} sebelum berkunjung.
                   </p>
                 </div>
 
@@ -754,51 +1025,122 @@ function App() {
                   <div className="visit-guide-item">
                     <span>01</span>
                     <div>
-                      <strong>Check the latest information</strong>
-                      <p>
-                        Cari tahu jam operasional, aturan kunjungan,
-                        dan informasi terbaru dari pengelola destinasi.
-                      </p>
+                      <strong>Highlights</strong>
+                      <ul>
+                        {selectedGuide.highlights.map((text, index) => (
+                          <li key={index}>{text}</li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
 
                   <div className="visit-guide-item">
                     <span>02</span>
                     <div>
-                      <strong>Prepare your travel budget</strong>
-                      <p>
-                        Sesuaikan anggaran dengan biaya perjalanan,
-                        tiket masuk, transportasi, dan kebutuhan lainnya.
-                      </p>
+                      <strong>Things to do</strong>
+                      <ul>
+                        {selectedGuide.activities.map((text, index) => (
+                          <li key={index}>{text}</li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
 
                   <div className="visit-guide-item">
                     <span>03</span>
                     <div>
-                      <strong>Check the weather</strong>
-                      <p>
-                        Perhatikan kondisi cuaca agar kamu bisa
-                        mempersiapkan perjalanan dengan lebih baik.
-                      </p>
+                      <strong>How to get there</strong>
+                      <p>{selectedGuide.access}</p>
                     </div>
                   </div>
 
                   <div className="visit-guide-item">
                     <span>04</span>
                     <div>
-                      <strong>Respect the destination</strong>
-                      <p>
-                        Jaga kebersihan, ikuti aturan setempat,
-                        dan hormati lingkungan serta budaya sekitar.
-                      </p>
+                      <strong>Facilities</strong>
+                      <p>{selectedGuide.facilities}</p>
+                    </div>
+                  </div>
+
+                  <div className="visit-guide-item">
+                    <span>05</span>
+                    <div>
+                      <strong>Travel tips</strong>
+                      <ul>
+                        {selectedGuide.tips.map((text, index) => (
+                          <li key={index}>{text}</li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* WEATHER INFORMATION */}
+            <section className="photo-gallery-section">
+              <div className="section-top">
+                <div>
+                  <span className="eyebrow">PHOTO PREVIEW</span>
+                  <h2>Destination Gallery</h2>
+                  <p>
+                    Foto utama destinasi dari katalog ExploreID.
+                  </p>
+                </div>
+              </div>
+
+              <div className="photo-gallery-grid">
+                <a
+                  href={selected.image}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="gallery-photo gallery-photo-main"
+                >
+                  <img src={selected.image} alt={selected.name} />
+                  <span>{selected.name}</span>
+                </a>
+              </div>
+            </section>
+
+            <section className="nearby-section">
+              <div className="section-top">
+                <div>
+                  <span className="eyebrow">EXPLORE MORE</span>
+                  <h2>Nearby destinations</h2>
+                  <p>
+                    Destinasi lain dengan koordinat terdekat dari{" "}
+                    {selected.name}.
+                  </p>
+                </div>
+              </div>
+
+              <div className="destination-grid">
+                {nearbyDestinations.map(({ item, distance }) => (
+                  <article className="destination-card" key={item.id}>
+                    <div className="card-image">
+                      <img src={item.image} alt={item.name} />
+                    </div>
+
+                    <div className="card-content">
+                      <span className="tag">{item.category}</span>
+                      <h3>{item.name}</h3>
+                      <p className="location">⌖ {item.location}</p>
+                      <p className="nearby-distance">
+                        Sekitar {distance.toFixed(1)} km berdasarkan
+                        jarak koordinat.
+                      </p>
+
+                      <button
+                        className="detail-link"
+                        onClick={() => openDetail(item)}
+                      >
+                        Explore destination ↗
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
             <section className="weather-section">
               <div className="weather-heading">
                 <div>
@@ -844,9 +1186,7 @@ function App() {
                       <strong className="weather-temperature">
                         {Math.round(weather.temperature)}°C
                       </strong>
-                      <p>
-                        {getWeatherDescription(weather.weatherCode)}
-                      </p>
+                      <p>{getWeatherDescription(weather.weatherCode)}</p>
                     </div>
                   </div>
 
@@ -882,6 +1222,151 @@ function App() {
                 </div>
               )}
             </section>
+
+            <section className="reviews-section">
+              <div className="section-top">
+                <div>
+                  <span className="eyebrow">COMMUNITY EXPERIENCE</span>
+                  <h2>Reviews & Ratings</h2>
+                  <p>
+                    Lihat penilaian dan pengalaman pengguna lainnya.
+                  </p>
+                </div>
+              </div>
+
+              <div className="review-summary">
+                <strong>
+                  {reviews.length > 0 ? averageRating.toFixed(1) : "—"}
+                </strong>
+
+                <span className="review-stars">
+                  {"★".repeat(Math.round(averageRating))}
+                  {"☆".repeat(5 - Math.round(averageRating))}
+                </span>
+
+                <small>
+                  {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
+                </small>
+              </div>
+
+              <div className="review-form">
+                <h3>Share your experience</h3>
+
+                {user ? (
+                  <>
+                    <label htmlFor="review-rating">Your rating</label>
+
+                    <div className="rating-picker" id="review-rating">
+                      {[1, 2, 3, 4, 5].map((rating) => (
+                        <button
+                          key={rating}
+                          type="button"
+                          className={
+                            rating <= reviewRating ? "rating-active" : ""
+                          }
+                          onClick={() => setReviewRating(rating)}
+                          aria-label={`${rating} stars`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+
+                    <textarea
+                      value={reviewComment}
+                      onChange={(event) =>
+                        setReviewComment(event.target.value)
+                      }
+                      placeholder="Ceritakan pengalamanmu tentang destinasi ini..."
+                      rows={4}
+                      maxLength={1000}
+                    />
+
+                    <button
+                      className="primary-button"
+                      onClick={submitReview}
+                      disabled={reviewLoading}
+                    >
+                      {reviewLoading ? "Submitting..." : "Submit Review"}
+                    </button>
+
+                    <small className="review-hint">
+                      Satu akun hanya dapat memiliki satu review per destinasi.
+                      Review berikutnya akan memperbarui review sebelumnya.
+                    </small>
+                  </>
+                ) : (
+                  <p>
+                    Silakan{" "}
+                    <button
+                      className="inline-link"
+                      onClick={() => navigate("login")}
+                    >
+                      login
+                    </button>{" "}
+                    untuk memberikan rating dan ulasan.
+                  </p>
+                )}
+
+                {reviewError && (
+                  <p className="review-error">{reviewError}</p>
+                )}
+
+                {reviewSuccess && (
+                  <p className="review-success">{reviewSuccess}</p>
+                )}
+              </div>
+
+              <div className="review-list">
+                {reviews.length > 0 ? (
+                  reviews.map((review) => (
+                    <article className="review-card" key={review.id}>
+                      <div className="review-card-top">
+                        <div>
+                          <strong>
+                            {review.user_id === user?.id
+                              ? "You"
+                              : review.user_name || "Explorer"}
+                          </strong>
+
+                          <span className="review-stars">
+                            {"★".repeat(review.rating)}
+                            {"☆".repeat(5 - review.rating)}
+                          </span>
+                        </div>
+
+                        <small>
+                          {new Date(review.created_at).toLocaleDateString(
+                            "id-ID",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+                        </small>
+                      </div>
+
+                      <p>{review.comment}</p>
+
+                      {user?.id === review.user_id && (
+                        <button
+                          className="review-delete"
+                          onClick={() => deleteReview(review.id)}
+                        >
+                          Delete review
+                        </button>
+                      )}
+                    </article>
+                  ))
+                ) : (
+                  <div className="empty-review">
+                    Belum ada ulasan untuk destinasi ini.
+                    Jadilah yang pertama memberikan review!
+                  </div>
+                )}
+              </div>
+            </section>
           </section>
         )}
 
@@ -896,9 +1381,9 @@ function App() {
 
             <div className="destination-grid">
               {favoriteDestinations.length > 0 ? (
-                favoriteDestinations.map((item) => (
-                  <DestinationCard key={item.id} item={item} />
-                ))
+                favoriteDestinations.map((item) =>
+                  renderDestinationCard(item)
+                )
               ) : (
                 <div className="empty-state">
                   <div className="empty-heart">♡</div>
@@ -906,7 +1391,6 @@ function App() {
                   <p>
                     Tekan ikon hati pada destinasi untuk menyimpannya.
                   </p>
-
                   <button
                     className="primary-button"
                     onClick={() => navigate("home")}
@@ -931,14 +1415,30 @@ function App() {
             {recentlyViewedDestinations.length > 0 ? (
               <>
                 <div className="destination-grid">
-                  {recentlyViewedDestinations.map((item) => (
-                    <DestinationCard key={item.id} item={item} />
-                  ))}
+                  {recentlyViewedDestinations.map((item) =>
+                    renderDestinationCard(item)
+                  )}
                 </div>
 
                 <button
                   className="clear-history"
-                  onClick={() => setRecentlyViewed([])}
+                  onClick={async () => {
+                    setRecentlyViewed([]);
+
+                    if (user && cloudReady) {
+                      try {
+                        await saveUserPreferences(user.id, {
+                          favorites,
+                          recently_viewed: [],
+                        });
+                      } catch (error) {
+                        console.error(
+                          "Gagal menghapus riwayat:",
+                          error
+                        );
+                      }
+                    }
+                  }}
                 >
                   Clear History
                 </button>
@@ -949,7 +1449,6 @@ function App() {
                 <p>
                   Destinasi yang kamu buka akan muncul di sini.
                 </p>
-
                 <button
                   className="primary-button"
                   onClick={() => navigate("home")}
@@ -967,7 +1466,6 @@ function App() {
             <div className="profile-card">
               <div className="avatar">{accountInitials}</div>
               <span className="eyebrow">YOUR PROFILE</span>
-
               <h1>{user ? accountName : "Guest Account"}</h1>
 
               <p className="profile-role">
@@ -1066,9 +1564,9 @@ function App() {
             </MapContainer>
 
             <div className="destination-grid map-list">
-              {destinations.map((item) => (
-                <DestinationCard key={item.id} item={item} />
-              ))}
+              {destinations.map((item) =>
+                renderDestinationCard(item)
+              )}
             </div>
           </section>
         )}
@@ -1089,9 +1587,7 @@ function App() {
                     item.category === "Nature" ||
                     item.category === "Adventure"
                 )
-                .map((item) => (
-                  <DestinationCard key={item.id} item={item} />
-                ))}
+                .map((item) => renderDestinationCard(item))}
             </div>
           </section>
         )}
