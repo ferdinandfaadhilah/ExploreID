@@ -125,6 +125,7 @@ function App() {
   const [maxBudget, setMaxBudget] = useState("All");
   const [sortOrder, setSortOrder] = useState("default");
   const [selected, setSelected] = useState<Destination | null>(null);
+  const [detailPhase, setDetailPhase] = useState<"exit" | "enter" | null>(null);
 
   const { user, loading: authLoading, signOut } = useAuth();
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
@@ -433,21 +434,24 @@ useEffect(() => {
     ? destinationGuides[selected.id] || defaultDestinationGuide
     : defaultDestinationGuide;
 
-  const nearbyDestinations = useMemo(() => {
-    if (!selected) return [];
 
-    return destinations
-      .filter((item) => item.id !== selected.id)
-      .map((item) => ({
-        item,
-        distance: calculateDistance(
-          selected.position,
-          item.position
-        ),
-      }))
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, 3);
-  }, [selected]);
+
+const nearbyDestinations = useMemo(() => {
+  if (!selected) return [];
+
+  return destinations
+    .filter((item) => item.id !== selected.id)
+    .map((item) => ({
+      item,
+      distance: calculateDistance(
+        selected.position,
+        item.position
+      ),
+    }))
+    .sort((a, b) => a.distance - b.distance);
+}, [selected, destinations]);
+
+
 
   const averageRating =
     reviews.length > 0
@@ -496,8 +500,11 @@ useEffect(() => {
     }
   }
 
-  // OPEN DETAIL AND SAVE RECENTLY VIEWED
-  async function openDetail(item: Destination) {
+    // OPEN DETAIL AND SAVE RECENTLY VIEWED
+  async function openDetail(
+    item: Destination,
+    withTransition = false
+  ) {
     const nextRecentlyViewed = [
       item.id,
       ...recentlyViewed.filter((id) => id !== item.id),
@@ -505,15 +512,12 @@ useEffect(() => {
 
     setRecentlyViewed(nextRecentlyViewed);
 
-    if (user && cloudReady) {
-      try {
-        await saveUserPreferences(user.id, {
-          favorites,
-          recently_viewed: nextRecentlyViewed,
-        });
-      } catch (error) {
-        console.error("Gagal menyimpan riwayat:", error);
-      }
+    // Animasi keluar hanya digunakan saat memilih Nearby Destinations.
+    if (withTransition) {
+      setDetailPhase("exit");
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    } else {
+      setDetailPhase(null);
     }
 
     setSelected(item);
@@ -526,6 +530,20 @@ useEffect(() => {
     setReviewRating(5);
 
     navigate("detail");
+
+    // Simpan riwayat ke Supabase tanpa menahan perpindahan halaman.
+    if (user && cloudReady) {
+      saveUserPreferences(user.id, {
+        favorites,
+        recently_viewed: nextRecentlyViewed,
+      }).catch((error) => {
+        console.error("Gagal menyimpan riwayat:", error);
+      });
+    }
+
+    if (withTransition) {
+      setDetailPhase("enter");
+    }
   }
 
   // SUBMIT REVIEW
@@ -795,114 +813,58 @@ useEffect(() => {
 
         {page === "home" && (
           <>
-            <section className="hero">
+            <section className="hero hero-discover">
               <img
                 className="hero-background"
-                src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=2400&q=90"
-                alt="Pemandangan alam Indonesia"
+                src="https://images.unsplash.com/photo-1650445332429-75ceee3f3226?auto=format&fit=crop&w=2400&q=95"
+                alt="Pemandangan kepulauan Raja Ampat, Papua Barat"
               />
 
               <div className="hero-overlay" />
+              <div className="hero-warm-glow" />
 
               <div className="hero-content">
                 <span className="hero-eyebrow">
-                  EXPLORE THE BEAUTY OF INDONESIA
+                  A JOURNEY THROUGH THE ARCHIPELAGO
                 </span>
 
                 <h1>
-                  Every Place
+                  DISCOVER
                   <br />
-                  Has a <span>Story.</span>
+                  <span>INDONESIA</span>
                 </h1>
 
                 <p>
-                  From breathtaking landscapes to hidden cultural gems,
-                  discover the places that make Indonesia extraordinary.
+                  Dari pegunungan hingga pantai tersembunyi, temukan keindahan
+                  alam, budaya, dan tempat luar biasa di seluruh Indonesia.
                 </p>
 
-                <form
-                  className="hero-search-panel hero-search-transparent"
-                  onSubmit={(event) => {
-                    event.preventDefault();
+                <button
+                  className="hero-button"
+                  onClick={() =>
                     document
                       .getElementById("explore")
-                      ?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    width: "100%",
-                    maxWidth: "650px",
-                    padding: "12px",
-                    marginTop: "32px",
-                    background: "rgba(255,255,255,0.10)",
-                    backdropFilter: "blur(18px)",
-                    WebkitBackdropFilter: "blur(18px)",
-                    border: "1px solid rgba(255,255,255,0.3)",
-                    borderRadius: "14px",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-                  }}
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
                 >
-                  <div
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "7px",
-                      paddingLeft: "12px",
-                    }}
-                  >
-                    <label
-                      htmlFor="hero-destination-search"
-                      style={{
-                        color: "#ffffff",
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        letterSpacing: "2px",
-                      }}
-                    >
-                      DESTINATION
-                    </label>
+                  Explore <span>→</span>
+                </button>
+              </div>
 
-                    <input
-                      id="hero-destination-search"
-                      type="search"
-                      placeholder="Where do you want to explore?"
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      style={{
-                        width: "100%",
-                        minWidth: 0,
-                        padding: "8px 0",
-                        background: "transparent",
-                        color: "#ffffff",
-                        border: "none",
-                        outline: "none",
-                        fontSize: "14px",
-                      }}
-                    />
-                  </div>
-
+              <div className="hero-destination-rail" aria-label="Pilihan destinasi Indonesia">
+                {destinations.map((item) => (
                   <button
-                    type="submit"
-                    style={{
-                      flexShrink: 0,
-                      padding: "15px 24px",
-                      background: "#456477",
-                      color: "#ffffff",
-                      border: "none",
-                      borderRadius: "9px",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      transition: "0.3s ease",
-                    }}
+                    className="hero-destination-card"
+                    key={item.id}
+                    onClick={() => openDetail(item)}
+                    title={`Lihat ${item.name}`}
                   >
-                    Search ↗
+                    <img src={item.image} alt={item.name} loading="lazy" />
+                    <span className="hero-card-location">{item.location}</span>
+                    <strong>{item.name}</strong>
+                    <span className="hero-card-arrow">↗</span>
                   </button>
-                </form>
+                ))}
               </div>
 
               <div className="hero-scroll">
@@ -1028,7 +990,15 @@ useEffect(() => {
 
         {/* DESTINATION DETAIL */}
         {page === "detail" && selected && (
-          <section className="inner-page destination-detail-page">
+          <section
+            key={selected.id}
+            className={`inner-page destination-detail-page ${
+      detailPhase === "exit"
+        ? "detail-exit"
+        : detailPhase === "enter"
+        ? "detail-enter"
+        : ""
+    }`}>
             <button
               className="back-button"
               onClick={() => navigate("home")}
@@ -1489,7 +1459,7 @@ useEffect(() => {
 
               <button
                 className="detail-link"
-                onClick={() => openDetail(item)}
+                onClick={() => openDetail(item, true)}
               >
                 Explore destination ↗
               </button>
