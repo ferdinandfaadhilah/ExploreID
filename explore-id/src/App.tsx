@@ -621,6 +621,25 @@ useEffect(() => {
         <div className="card-image">
           <img src={item.image} alt={item.name} />
 
+          <div className="card-image-overlay">
+            <div className="card-content">
+              <span className="tag">{item.category}</span>
+              <h3>{item.name}</h3>
+              <p className="location">⌖ {item.location}</p>
+              <p className="card-description">{item.description}</p>
+
+              <div className="card-bottom">
+                <strong>{item.price}</strong>
+                <button
+                  className="detail-link"
+                  onClick={() => openDetail(item)}
+                >
+                  Details ↗
+                </button>
+              </div>
+            </div>
+          </div>
+
           <button
             className={`heart-button ${saved ? "saved" : ""}`}
             onClick={() => toggleFavorite(item.id)}
@@ -628,24 +647,6 @@ useEffect(() => {
           >
             {saved ? "♥" : "♡"}
           </button>
-        </div>
-
-        <div className="card-content">
-          <span className="tag">{item.category}</span>
-          <h3>{item.name}</h3>
-          <p className="location">⌖ {item.location}</p>
-          <p className="card-description">{item.description}</p>
-
-          <div className="card-bottom">
-            <strong>{item.price}</strong>
-
-            <button
-              className="detail-link"
-              onClick={() => openDetail(item)}
-            >
-              Details ↗
-            </button>
-          </div>
         </div>
       </article>
     );
@@ -1451,46 +1452,55 @@ useEffect(() => {
               </div>
             </section>
 
-            {/* NEARBY DESTINATIONS */}
-            <section className="nearby-section">
-              <div className="section-top">
-                <div>
-                  <span className="eyebrow">EXPLORE MORE</span>
-                  <h2>Nearby destinations</h2>
-                  <p>
-                    Destinasi lain dengan koordinat terdekat dari{" "}
-                    {selected.name}.
-                  </p>
-                </div>
-              </div>
 
-              <div className="destination-grid">
-                {nearbyDestinations.map(({ item, distance }) => (
-                  <article className="destination-card" key={item.id}>
-                    <div className="card-image">
-                      <img src={item.image} alt={item.name} />
-                    </div>
+{/* NEARBY DESTINATIONS */}
+<section className="nearby-section">
+  <div className="section-top">
+    <div>
+      <span className="eyebrow">EXPLORE MORE</span>
+      <h2>Nearby destinations</h2>
+      <p>
+        Destinasi lain dengan koordinat terdekat dari{" "}
+        {selected.name}.
+      </p>
+    </div>
+  </div>
 
-                    <div className="card-content">
-                      <span className="tag">{item.category}</span>
-                      <h3>{item.name}</h3>
-                      <p className="location">⌖ {item.location}</p>
-                      <p className="nearby-distance">
-                        Sekitar {distance.toFixed(1)} km berdasarkan
-                        jarak koordinat.
-                      </p>
+  <div className="destination-grid">
+    {nearbyDestinations.map(({ item, distance }) => (
+      <article className="destination-card" key={item.id}>
+        <div className="card-image">
+          <img src={item.image} alt={item.name} />
 
-                      <button
-                        className="detail-link"
-                        onClick={() => openDetail(item)}
-                      >
-                        Explore destination ↗
-                      </button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
+          <div className="card-image-overlay">
+            <div className="card-content">
+              <span className="tag">{item.category}</span>
+
+              <h3>{item.name}</h3>
+
+              <p className="location">
+                ⌖ {item.location}
+              </p>
+
+              <p className="nearby-distance">
+                Sekitar {distance.toFixed(1)} km berdasarkan
+                jarak koordinat.
+              </p>
+
+              <button
+                className="detail-link"
+                onClick={() => openDetail(item)}
+              >
+                Explore destination ↗
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    ))}
+  </div>
+</section>
+
 
             {/* WEATHER */}
             <section className="weather-section">

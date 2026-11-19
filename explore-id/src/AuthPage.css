@@ -1,8 +1,3 @@
-
-/* ================================
-   AUTH PAGE
-================================ */
-
 .auth-page {
   min-height: 100vh;
   padding: 32px;
@@ -598,4 +593,127 @@
   letter-spacing: 1.5px;
   color: #92958c;
   white-space: nowrap;
+}
+
+
+/* =================================
+   EXPLOREID AUTH - BLUE THEME
+================================= */
+
+/* Jarak aman dari navbar */
+.auth-page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 125px 32px 32px;
+  align-items: flex-start;
+  background: #1c2d3d;
+}
+
+.auth-wrapper {
+  margin: 0 auto;
+  border-radius: 24px;
+  box-shadow: 0 25px 80px rgba(10, 20, 30, 0.2);
+}
+
+/* LEFT PANEL */
+.auth-visual {
+  background:
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(168, 194, 209, 0.18),
+      transparent 35%
+    ),
+    linear-gradient(
+      145deg,
+      #1c2d3d,
+      #293e50 55%,
+      #142432
+    );
+}
+
+.auth-brand span,
+.auth-mobile-brand span,
+.auth-visual-heading h1 span {
+  color: #a8c2d1;
+}
+
+.auth-kicker {
+  color: #a8c2d1;
+}
+
+.auth-visual-card-image {
+  background:
+    linear-gradient(
+      0deg,
+      rgba(12, 27, 39, 0.82),
+      rgba(12, 27, 39, 0.03)
+    ),
+    url("https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1000&q=85")
+    center 55% / cover;
+}
+
+.auth-image-overlay span {
+  color: #a8c2d1;
+}
+
+/* RIGHT PANEL */
+.auth-form-top button {
+  color: #456a7e;
+}
+
+.auth-mobile-brand {
+  color: #1c2d3d;
+}
+
+.auth-form-heading .auth-kicker {
+  color: #456a7e;
+}
+
+.auth-form-heading h2 {
+  color: #263746;
+}
+
+.auth-field label {
+  color: #394b59;
+}
+
+.auth-field input {
+  border-color: #e1e7eb;
+  background: #f8fafb;
+  color: #263746;
+}
+
+.auth-field input:focus {
+  border-color: #7898aa;
+  box-shadow: 0 0 0 3px rgba(69, 106, 126, 0.12);
+}
+
+.auth-password-toggle {
+  color: #456a7e;
+}
+
+/* BUTTON */
+.auth-submit {
+  background: #456a7e;
+}
+
+.auth-submit:hover:not(:disabled) {
+  background: #345568;
+  box-shadow: 0 8px 20px rgba(69, 106, 126, 0.2);
+}
+
+/* RESPONSIVE */
+@media (max-width: 680px) {
+  .auth-page {
+    padding: 110px 0 0;
+    align-items: stretch;
+  }
+
+  .auth-wrapper {
+    min-height: calc(100vh - 110px);
+  }
+
+  .auth-form-panel {
+    min-height: calc(100vh - 110px);
+  }
 }

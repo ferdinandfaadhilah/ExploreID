@@ -426,14 +426,23 @@ async function handleSave() {
             </button>
           </div>
           <div className="profile-logout-section">
-  <button
-    type="button"
-    className="profile-logout-button"
-    onClick={onLogout}
-    disabled={saving}
-  >
-    Log Out
-  </button>
+
+<button
+  type="button"
+  className="profile-logout-button"
+  onClick={() => {
+    const confirmed = window.confirm(
+      "Apakah kamu yakin ingin keluar dari akun?"
+    );
+
+    if (confirmed) {
+      onLogout();
+    }
+  }}
+  disabled={saving}
+>
+  Log Out
+</button>
 </div>
         </div>
       </main>
