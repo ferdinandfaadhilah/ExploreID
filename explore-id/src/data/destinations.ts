@@ -8,6 +8,11 @@ export type Destination = {
   budget: number;
   image: string;
   position: [number, number];
+
+  // Ticket information
+  ticketPrice?: string;
+  ticketUrl?: string;
+  ticketNote?: string;
 };
 
 // Batch pertama: 30 destinasi dari berbagai wilayah Indonesia.

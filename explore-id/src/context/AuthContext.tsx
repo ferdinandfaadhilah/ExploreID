@@ -10,19 +10,28 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
 
+type OAuthProvider = "google" | "github";
+
 type AuthContextType = {
   user: User | null;
   session: Session | null;
   loading: boolean;
+
   signUp: (
     fullName: string,
     email: string,
     password: string
   ) => Promise<{ error: string | null }>;
+
   signIn: (
     email: string,
     password: string
   ) => Promise<{ error: string | null }>;
+
+  signInWithOAuth: (
+    provider: OAuthProvider
+  ) => Promise<{ error: string | null }>;
+
   signOut: () => Promise<{ error: string | null }>;
 };
 
@@ -104,6 +113,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   }
 
+  async function signInWithOAuth(provider: OAuthProvider) {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    return { error: error?.message ?? null };
+  }
+
   async function signOut() {
     const { error } = await supabase.auth.signOut();
 
@@ -118,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signUp,
         signIn,
+        signInWithOAuth,
         signOut,
       }}
     >

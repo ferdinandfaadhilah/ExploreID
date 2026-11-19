@@ -1,8 +1,11 @@
+
 import "./App.css";
 import { useEffect, useMemo, useState } from "react";
 import AuthPage from "./AuthPage";
 import { useAuth } from "./context/AuthContext";
 import { supabase } from "./lib/supabaseClient";
+import { ticketInformation } from "./data/ticketInformation";
+import ProfilePage from "./ProfilePage";
 import {
   getUserPreferences,
   saveUserPreferences,
@@ -31,6 +34,7 @@ type Page =
   | "map"
   | "for-you"
   | "recently-viewed"
+  | "search"
   | "login"
   | "register";
 
@@ -50,15 +54,6 @@ type Review = {
   comment: string;
   created_at: string;
 };
-
-const categories = [
-  "All",
-  "Nature",
-  "Culture",
-  "Culinary",
-  "Entertainment",
-  "Adventure",
-];
 
 const destinationIcon = divIcon({
   className: "explore-map-marker",
@@ -125,12 +120,46 @@ function App() {
   const [page, setPage] = useState<Page>("home");
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [location, setLocation] = useState("All");
   const [maxBudget, setMaxBudget] = useState("All");
   const [sortOrder, setSortOrder] = useState("default");
   const [selected, setSelected] = useState<Destination | null>(null);
 
   const { user, loading: authLoading, signOut } = useAuth();
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+useEffect(() => {
+  if (!user) {
+    setProfileAvatar(null);
+    return;
+  }
+
+  const userId = user.id;
+  let active = true;
+
+  async function loadAvatar() {
+    const { data, error } = await supabase
+      .from("user_profiles")
+      .select("avatar_url")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Gagal mengambil foto profil:", error);
+      return;
+    }
+
+    if (active) {
+      setProfileAvatar(data?.avatar_url || null);
+    }
+  }
+
+  loadAvatar();
+
+  return () => {
+    active = false;
+  };
+}, [user]);
 
   const accountName =
     user?.user_metadata?.full_name ||
@@ -632,7 +661,7 @@ function App() {
 
   return (
     <div className="app">
-      <header className="navbar">
+      <header className={`navbar ${page === "home" ? "navbar-transparent" : ""}`}>
         <button className="logo" onClick={() => navigate("home")}>
           Explore<span>ID.</span>
         </button>
@@ -650,13 +679,65 @@ function App() {
           <button onClick={() => navigate("for-you")}>For You</button>
 
           <button
-            className={
-              page === "recently-viewed" ? "nav-active" : ""
-            }
+            className={page === "recently-viewed" ? "nav-active" : ""}
             onClick={() => navigate("recently-viewed")}
           >
             Recent
           </button>
+
+          <div className="nav-search-wrap">
+            <button
+              className="nav-search"
+              aria-label="Search"
+              onClick={() => setSearchOpen(!searchOpen)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-4-4" />
+              </svg>
+            </button>
+
+            {searchOpen && (
+              <input
+                className="nav-search-input"
+                type="text"
+                placeholder="Cari destinasi..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    setSearchOpen(false);
+
+                    if (page !== "home") {
+                      navigate("home");
+
+                      setTimeout(() => {
+                        document
+                          .getElementById("explore")
+                          ?.scrollIntoView({ behavior: "smooth" });
+                      }, 150);
+                    } else {
+                      document
+                        .getElementById("explore")
+                        ?.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }
+                }}
+                autoFocus
+              />
+            )}
+          </div>
         </nav>
 
         <div className="nav-actions">
@@ -668,13 +749,21 @@ function App() {
           </button>
 
           {user ? (
-            <button
-              className="profile-nav"
-              onClick={() => navigate("profile")}
-              title="Open profile"
-            >
-              {accountInitials}
-            </button>
+<button
+  className="profile-nav"
+  onClick={() => navigate("profile")}
+  title="Open profile"
+>
+  {profileAvatar ? (
+    <img
+      src={profileAvatar}
+      alt="Foto profil"
+      className="profile-nav-image"
+    />
+  ) : (
+    accountInitials
+  )}
+</button>
           ) : (
             <>
               <button
@@ -706,43 +795,117 @@ function App() {
         {page === "home" && (
           <>
             <section className="hero">
-              <div className="hero-copy">
-                <span className="eyebrow">DISCOVER INDONESIA</span>
+              <img
+                className="hero-background"
+                src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=2400&q=90"
+                alt="Pemandangan alam Indonesia"
+              />
+
+              <div className="hero-overlay" />
+
+              <div className="hero-content">
+                <span className="hero-eyebrow">
+                  EXPLORE THE BEAUTY OF INDONESIA
+                </span>
 
                 <h1>
-                  Explore Indonesia,
+                  Every Place
                   <br />
-                  <span>Beyond the Ordinary.</span>
+                  Has a <span>Story.</span>
                 </h1>
 
                 <p>
-                  From breathtaking landscapes to hidden cultural
-                  treasures, discover remarkable places and experiences
-                  across Indonesia.
+                  From breathtaking landscapes to hidden cultural gems,
+                  discover the places that make Indonesia extraordinary.
                 </p>
 
-                <button
-                  className="primary-button"
-                  onClick={() =>
+                <form
+                  className="hero-search-panel hero-search-transparent"
+                  onSubmit={(event) => {
+                    event.preventDefault();
                     document
                       .getElementById("explore")
-                      ?.scrollIntoView({ behavior: "smooth" })
-                  }
+                      ?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    width: "100%",
+                    maxWidth: "650px",
+                    padding: "12px",
+                    marginTop: "32px",
+                    background: "rgba(255,255,255,0.10)",
+                    backdropFilter: "blur(18px)",
+                    WebkitBackdropFilter: "blur(18px)",
+                    border: "1px solid rgba(255,255,255,0.3)",
+                    borderRadius: "14px",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+                  }}
                 >
-                  Explore destinations <span>↗</span>
-                </button>
+                  <div
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "7px",
+                      paddingLeft: "12px",
+                    }}
+                  >
+                    <label
+                      htmlFor="hero-destination-search"
+                      style={{
+                        color: "#ffffff",
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        letterSpacing: "2px",
+                      }}
+                    >
+                      DESTINATION
+                    </label>
+
+                    <input
+                      id="hero-destination-search"
+                      type="search"
+                      placeholder="Where do you want to explore?"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      style={{
+                        width: "100%",
+                        minWidth: 0,
+                        padding: "8px 0",
+                        background: "transparent",
+                        color: "#ffffff",
+                        border: "none",
+                        outline: "none",
+                        fontSize: "14px",
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    style={{
+                      flexShrink: 0,
+                      padding: "15px 24px",
+                      background: "#456477",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: "9px",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      transition: "0.3s ease",
+                    }}
+                  >
+                    Search ↗
+                  </button>
+                </form>
               </div>
 
-              <div className="hero-visual">
-                <img
-                  src="https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=1400"
-                  alt="Beautiful travel landscape"
-                />
-
-                <div className="hero-caption">
-                  <span>YOUR NEXT JOURNEY STARTS HERE</span>
-                  <strong>Explore the extraordinary.</strong>
-                </div>
+              <div className="hero-scroll">
+                SCROLL TO EXPLORE <span>↓</span>
               </div>
             </section>
 
@@ -761,59 +924,7 @@ function App() {
                 </span>
               </div>
 
-              <input
-                className="search-input"
-                type="search"
-                placeholder="Search destinations or locations..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-
-              <div className="category-list">
-                {categories.map((item) => (
-                  <button
-                    key={item}
-                    className={
-                      category === item
-                        ? "category-chip selected"
-                        : "category-chip"
-                    }
-                    onClick={() => setCategory(item)}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-
               <div className="filter-row">
-                <select
-                  className="filter-select"
-                  value={location}
-                  onChange={(event) => setLocation(event.target.value)}
-                >
-                  <option value="All">All Locations</option>
-
-                  {[...new Set(destinations.map((item) => item.location))]
-                    .sort((a, b) => a.localeCompare(b, "id"))
-                    .map((place) => (
-                      <option key={place} value={place}>
-                        {place}
-                      </option>
-                    ))}
-                </select>
-
-                <select
-                  className="filter-select"
-                  value={maxBudget}
-                  onChange={(event) => setMaxBudget(event.target.value)}
-                >
-                  <option value="All">Any Budget</option>
-                  <option value="50000">Max Rp50.000</option>
-                  <option value="100000">Max Rp100.000</option>
-                  <option value="200000">Max Rp200.000</option>
-                  <option value="500000">Max Rp500.000</option>
-                </select>
-
                 <select
                   className="filter-select"
                   value={sortOrder}
@@ -914,6 +1025,7 @@ function App() {
           </>
         )}
 
+        {/* DESTINATION DETAIL */}
         {page === "detail" && selected && (
           <section className="inner-page destination-detail-page">
             <button
@@ -969,13 +1081,15 @@ function App() {
               </div>
             </div>
 
+            {/* DESTINATION OVERVIEW */}
             <section className="destination-info-section">
               <div className="section-top">
                 <div>
                   <span className="eyebrow">DESTINATION OVERVIEW</span>
                   <h2>Get to know this place</h2>
                   <p>
-                    Informasi singkat sebelum merencanakan perjalanan.
+                    Kenali informasi penting tentang {selected.name}
+                    sebelum merencanakan perjalanan.
                   </p>
                 </div>
               </div>
@@ -995,7 +1109,7 @@ function App() {
                   <div>
                     <small>Category</small>
                     <h3>{selected.category}</h3>
-                    <p>Kategori pengalaman destinasi ini.</p>
+                    <p>Kategori pengalaman destinasi.</p>
                   </div>
                 </article>
 
@@ -1004,12 +1118,235 @@ function App() {
                   <div>
                     <small>Estimated Budget</small>
                     <h3>{selected.price}</h3>
-                    <p>Perkiraan biaya berdasarkan data ExploreID.</p>
+                    <p>
+                      Perkiraan biaya berdasarkan katalog ExploreID,
+                      bukan harga tiket resmi.
+                    </p>
                   </div>
                 </article>
               </div>
+
+              <div className="destination-coordinate">
+                <div>
+                  <span className="eyebrow">LOCATION COORDINATES</span>
+                  <h3>Find this destination</h3>
+                  <p>
+                    Latitude: {selected.position[0]}°
+                    <br />
+                    Longitude: {selected.position[1]}°
+                  </p>
+                </div>
+
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${selected.position[0]},${selected.position[1]}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="detail-map-link"
+                >
+                  View on Google Maps ↗
+                </a>
+              </div>
             </section>
 
+
+{/* TICKET INFORMATION */}
+<section className="ticket-information-section">
+  <div className="section-top">
+    <div>
+      <span className="eyebrow">TICKET INFORMATION</span>
+      <h2>Plan your visit</h2>
+      <p>
+        Informasi tiket untuk {selected.name}.
+        Periksa informasi terbaru sebelum berkunjung.
+      </p>
+    </div>
+  </div>
+
+  <div className="ticket-information-card">
+    <div className="ticket-information-icon">
+      🎟️
+    </div>
+
+    <div className="ticket-information-content">
+      <span>OFFICIAL TICKET INFORMATION</span>
+
+      <h3>
+        {ticketInformation[selected.id]?.ticketPrice ||
+          "Informasi tiket belum tersedia"}
+      </h3>
+
+      <p>
+        {ticketInformation[selected.id]?.ticketNote ||
+          "Kanal pembelian tiket resmi untuk destinasi ini belum tersedia di ExploreID."}
+      </p>
+
+      {ticketInformation[selected.id]?.ticketUrl && (
+        <a
+          href={ticketInformation[selected.id].ticketUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="primary-button"
+        >
+          Check Official Tickets ↗
+        </a>
+      )}
+
+      <p className="ticket-unavailable">
+        Harga dan ketersediaan tiket mengikuti informasi dari pengelola.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+            {/* TICKET INFORMATION */}
+            <section className="ticket-information-section">
+              <div className="section-top">
+                <div>
+                  <span className="eyebrow">TICKET INFORMATION</span>
+                  <h2>Plan your visit</h2>
+                  <p>
+                    Informasi tiket untuk {selected.name}.
+                    Periksa informasi terbaru sebelum berkunjung.
+                  </p>
+                </div>
+              </div>
+
+              <div className="ticket-information-card">
+                <div className="ticket-information-icon">
+                  🎟️
+                </div>
+
+                <div className="ticket-information-content">
+                  <span>OFFICIAL TICKET PRICE</span>
+
+                  <h3>
+                    {selected.ticketPrice ||
+                      "Informasi belum tersedia"}
+                  </h3>
+
+                  <p>
+                    {selected.ticketNote ||
+                      "Harga tiket belum tersedia dalam katalog ExploreID. Harga dapat berubah sesuai kebijakan pengelola."}
+                  </p>
+
+                  {selected.ticketUrl ? (
+                    <a
+                      href={selected.ticketUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="primary-button"
+                    >
+                      View Official Ticket Info ↗
+                    </a>
+                  ) : (
+                    <p className="ticket-unavailable">
+                      Tautan tiket resmi belum tersedia.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* TICKET INFORMATION */}
+            <section className="ticket-information-section">
+              <div className="section-top">
+                <div>
+                  <span className="eyebrow">TICKET INFORMATION</span>
+                  <h2>Plan your visit</h2>
+                  <p>
+                    Informasi tiket untuk {selected.name}.
+                    Periksa informasi terbaru sebelum berkunjung.
+                  </p>
+                </div>
+              </div>
+
+              <div className="ticket-information-card">
+                <div className="ticket-information-icon">
+                  🎟️
+                </div>
+
+                <div className="ticket-information-content">
+                  <span>OFFICIAL TICKET PRICE</span>
+
+                  <h3>
+                    {selected.ticketPrice ||
+                      "Informasi belum tersedia"}
+                  </h3>
+
+                  <p>
+                    {selected.ticketNote ||
+                      "Harga tiket belum tersedia dalam katalog ExploreID. Harga dapat berubah sesuai kebijakan pengelola."}
+                  </p>
+
+                  {selected.ticketUrl ? (
+                    <a
+                      href={selected.ticketUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="primary-button"
+                    >
+                      Check Official Tickets ↗
+                    </a>
+                  ) : (
+                    <p className="ticket-unavailable">
+                      Tautan tiket resmi belum tersedia.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* TICKET INFORMATION */}
+            <section className="ticket-information-section">
+              <div className="section-top">
+                <div>
+                  <span className="eyebrow">TICKET INFORMATION</span>
+                  <h2>Plan your visit</h2>
+                  <p>
+                    Informasi tiket untuk {selected.name}.
+                    Periksa informasi terbaru sebelum berkunjung.
+                  </p>
+                </div>
+              </div>
+
+              <div className="ticket-information-card">
+                <div className="ticket-information-icon">
+                  🎟️
+                </div>
+
+                <div className="ticket-information-content">
+                  <span>OFFICIAL TICKET PRICE</span>
+
+                  <h3>
+                    {selected.ticketPrice ||
+                      "Informasi belum tersedia"}
+                  </h3>
+
+                  <p>
+                    {selected.ticketNote ||
+                      "Harga tiket belum tersedia dalam katalog ExploreID. Harga dapat berubah sesuai kebijakan pengelola."}
+                  </p>
+
+                  {selected.ticketUrl ? (
+                    <a
+                      href={selected.ticketUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="primary-button"
+                    >
+                      Check Official Tickets ↗
+                    </a>
+                  ) : (
+                    <p className="ticket-unavailable">
+                      Tautan tiket resmi belum tersedia.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* TRAVEL GUIDE */}
             <section className="visit-guide-section">
               <div className="visit-guide-content">
                 <div>
@@ -1025,7 +1362,11 @@ function App() {
                   <div className="visit-guide-item">
                     <span>01</span>
                     <div>
-                      <strong>Highlights</strong>
+                      <strong>Destination Highlights</strong>
+                      <p>
+                        Hal menarik yang menjadi daya tarik utama
+                        destinasi ini.
+                      </p>
                       <ul>
                         {selectedGuide.highlights.map((text, index) => (
                           <li key={index}>{text}</li>
@@ -1037,7 +1378,11 @@ function App() {
                   <div className="visit-guide-item">
                     <span>02</span>
                     <div>
-                      <strong>Things to do</strong>
+                      <strong>Things to Do</strong>
+                      <p>
+                        Aktivitas yang dapat kamu pertimbangkan
+                        saat berkunjung.
+                      </p>
                       <ul>
                         {selectedGuide.activities.map((text, index) => (
                           <li key={index}>{text}</li>
@@ -1049,7 +1394,7 @@ function App() {
                   <div className="visit-guide-item">
                     <span>03</span>
                     <div>
-                      <strong>How to get there</strong>
+                      <strong>How to Get There</strong>
                       <p>{selectedGuide.access}</p>
                     </div>
                   </div>
@@ -1057,7 +1402,7 @@ function App() {
                   <div className="visit-guide-item">
                     <span>04</span>
                     <div>
-                      <strong>Facilities</strong>
+                      <strong>Available Facilities</strong>
                       <p>{selectedGuide.facilities}</p>
                     </div>
                   </div>
@@ -1065,7 +1410,11 @@ function App() {
                   <div className="visit-guide-item">
                     <span>05</span>
                     <div>
-                      <strong>Travel tips</strong>
+                      <strong>Travel Tips</strong>
+                      <p>
+                        Beberapa hal yang perlu diperhatikan
+                        sebelum dan selama perjalanan.
+                      </p>
                       <ul>
                         {selectedGuide.tips.map((text, index) => (
                           <li key={index}>{text}</li>
@@ -1077,6 +1426,7 @@ function App() {
               </div>
             </section>
 
+            {/* PHOTO GALLERY */}
             <section className="photo-gallery-section">
               <div className="section-top">
                 <div>
@@ -1101,6 +1451,7 @@ function App() {
               </div>
             </section>
 
+            {/* NEARBY DESTINATIONS */}
             <section className="nearby-section">
               <div className="section-top">
                 <div>
@@ -1141,6 +1492,7 @@ function App() {
               </div>
             </section>
 
+            {/* WEATHER */}
             <section className="weather-section">
               <div className="weather-heading">
                 <div>
@@ -1223,6 +1575,7 @@ function App() {
               )}
             </section>
 
+            {/* REVIEWS */}
             <section className="reviews-section">
               <div className="section-top">
                 <div>
@@ -1406,121 +1759,71 @@ function App() {
         {/* RECENTLY VIEWED */}
         {page === "recently-viewed" && (
           <section className="inner-page">
-            <span className="eyebrow">YOUR ACTIVITY</span>
+            <span className="eyebrow">YOUR JOURNEY</span>
             <h1 className="page-title">Recently Viewed</h1>
             <p className="page-subtitle">
               Destinasi yang terakhir kamu lihat.
             </p>
 
-            {recentlyViewedDestinations.length > 0 ? (
-              <>
-                <div className="destination-grid">
-                  {recentlyViewedDestinations.map((item) =>
-                    renderDestinationCard(item)
-                  )}
+            <div className="destination-grid">
+              {recentlyViewedDestinations.length > 0 ? (
+                recentlyViewedDestinations.map((item) =>
+                  renderDestinationCard(item)
+                )
+              ) : (
+                <div className="empty-state">
+                  <h3>No recent destinations</h3>
+                  <p>
+                    Destinasi yang kamu buka akan muncul di sini.
+                  </p>
+                  <button
+                    className="primary-button"
+                    onClick={() => navigate("home")}
+                  >
+                    Explore destinations
+                  </button>
                 </div>
+              )}
+            </div>
+          </section>
+        )}
 
-                <button
-                  className="clear-history"
-                  onClick={async () => {
-                    setRecentlyViewed([]);
+        {/* SEARCH PAGE */}
+        {page === "search" && (
+          <section className="inner-page search-page">
+            <span className="eyebrow">DISCOVER INDONESIA</span>
+            <h1 className="page-title">Find Your Destination</h1>
+            <p className="page-subtitle">
+              Temukan destinasi menarik untuk perjalananmu.
+            </p>
 
-                    if (user && cloudReady) {
-                      try {
-                        await saveUserPreferences(user.id, {
-                          favorites,
-                          recently_viewed: [],
-                        });
-                      } catch (error) {
-                        console.error(
-                          "Gagal menghapus riwayat:",
-                          error
-                        );
-                      }
-                    }
-                  }}
-                >
-                  Clear History
-                </button>
-              </>
-            ) : (
-              <div className="empty-state">
-                <h3>No recent destinations yet</h3>
-                <p>
-                  Destinasi yang kamu buka akan muncul di sini.
-                </p>
-                <button
-                  className="primary-button"
-                  onClick={() => navigate("home")}
-                >
-                  Explore Destinations
-                </button>
-              </div>
-            )}
+            <div className="search-page-input">
+              <input
+                type="text"
+                placeholder="Cari nama destinasi atau lokasi..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="destination-grid">
+              {filteredDestinations.length > 0 ? (
+                filteredDestinations.map((item) =>
+                  renderDestinationCard(item)
+                )
+              ) : (
+                <div className="empty-state">
+                  <h3>Destinasi tidak ditemukan</h3>
+                  <p>Coba gunakan kata kunci lainnya.</p>
+                </div>
+              )}
+            </div>
           </section>
         )}
 
         {/* PROFILE */}
         {page === "profile" && (
-          <section className="profile-page">
-            <div className="profile-card">
-              <div className="avatar">{accountInitials}</div>
-              <span className="eyebrow">YOUR PROFILE</span>
-              <h1>{user ? accountName : "Guest Account"}</h1>
-
-              <p className="profile-role">
-                {user ? user.email : "Login untuk melihat profil akun"}
-              </p>
-
-              {user ? (
-                <div className="profile-info">
-                  <div>
-                    <span>Account Name</span>
-                    <strong>{accountName}</strong>
-                  </div>
-
-                  <div>
-                    <span>Email Address</span>
-                    <strong>{user.email}</strong>
-                  </div>
-
-                  <div>
-                    <span>Account Status</span>
-                    <strong>Signed in</strong>
-                  </div>
-                </div>
-              ) : (
-                <p>
-                  Masuk atau buat akun untuk menggunakan profil ExploreID.
-                </p>
-              )}
-
-              <div className="profile-actions">
-                <button
-                  className="primary-button"
-                  onClick={() => navigate("home")}
-                >
-                  Back to Explore
-                </button>
-
-                {user ? (
-                  <button
-                    className="auth-nav-button"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </button>
-                ) : (
-                  <button
-                    className="auth-nav-button auth-nav-primary"
-                    onClick={() => navigate("login")}
-                  >
-                    Login
-                  </button>
-                )}
-              </div>
-            </div>
-          </section>
+          <ProfilePage onLogout={handleLogout} />
         )}
 
         {/* MAP */}
