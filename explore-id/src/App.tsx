@@ -28,6 +28,7 @@ import {
 
 type Page =
   | "home"
+  | "explore"
   | "detail"
   | "favorites"
   | "profile"
@@ -116,8 +117,43 @@ function calculateDistance(
   );
 }
 
+const homeWelcomeMessages = [
+  {
+    description:
+      "Dari pegunungan hingga pantai tersembunyi, selalu ada keindahan Indonesia yang menunggu untuk kamu temukan.",
+    introTitle: "Setiap perjalanan punya cerita",
+    introDescription:
+      "Jelajahi beragam destinasi di seluruh Indonesia, kenali keindahan alam dan kekayaan budayanya, lalu temukan tempat yang ingin kamu kunjungi berikutnya.",
+  },
+  {
+    description:
+      "Indonesia menyimpan begitu banyak tempat istimewa. Temukan inspirasi perjalananmu dari berbagai penjuru Nusantara.",
+    introTitle: "Kenali lebih banyak tentang Indonesia",
+    introDescription:
+      "Dari tempat populer hingga lokasi yang belum banyak dikenal, ExploreID membantumu menemukan inspirasi untuk perjalanan berikutnya.",
+  },
+  {
+    description:
+      "Ada banyak sudut Nusantara yang menunggu untuk dijelajahi. Mulai temukan destinasi menarik versimu di sini.",
+    introTitle: "Petualangan baru dimulai di sini",
+    introDescription:
+      "ExploreID hadir untuk menemanimu menjelajahi destinasi, mengenal budaya, dan menemukan pengalaman baru dari berbagai daerah di Indonesia.",
+  },
+  {
+    description:
+      "Bukan hanya tentang tempat yang dikunjungi, tetapi juga cerita dan pengalaman yang kamu temukan sepanjang perjalanan.",
+    introTitle: "Temukan tempat, ciptakan cerita",
+    introDescription:
+      "Jadikan ExploreID sebagai titik awal untuk mencari destinasi, mendapatkan informasi, dan merencanakan pengalaman perjalanan yang berkesan.",
+  },
+];
+
 function App() {
+  const [homeWelcome] = useState(
+    () => homeWelcomeMessages[Math.floor(Math.random() * homeWelcomeMessages.length)]
+  );
   const [page, setPage] = useState<Page>("home");
+  const [activeHomeSection, setActiveHomeSection] = useState<"home" | "explore">("home");
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -126,6 +162,34 @@ function App() {
   const [sortOrder, setSortOrder] = useState("default");
   const [selected, setSelected] = useState<Destination | null>(null);
   const [detailPhase, setDetailPhase] = useState<"exit" | "enter" | null>(null);
+
+  useEffect(() => {
+    const updateActiveSection = () => {
+      if (page !== "home") {
+        setActiveHomeSection("home");
+        return;
+      }
+
+      const exploreSection = document.getElementById("explore-catalog");
+      if (!exploreSection) {
+        setActiveHomeSection("home");
+        return;
+      }
+
+      setActiveHomeSection(
+        exploreSection.getBoundingClientRect().top <= 140 ? "explore" : "home"
+      );
+    };
+
+    updateActiveSection();
+    window.addEventListener("scroll", updateActiveSection, { passive: true });
+    window.addEventListener("resize", updateActiveSection);
+
+    return () => {
+      window.removeEventListener("scroll", updateActiveSection);
+      window.removeEventListener("resize", updateActiveSection);
+    };
+  }, [page]);
 
   const { user, loading: authLoading, signOut } = useAuth();
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
@@ -460,6 +524,17 @@ const nearbyDestinations = useMemo(() => {
       : 0;
 
   function navigate(nextPage: Page) {
+    if (nextPage === "explore") {
+      setPage("home");
+      window.setTimeout(() => {
+        document.getElementById("explore-catalog")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 0);
+      return;
+    }
+
     setPage(nextPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -687,13 +762,18 @@ const nearbyDestinations = useMemo(() => {
 
         <nav className="nav-links">
           <button
-            className={page === "home" ? "nav-active" : ""}
+            className={page === "home" && activeHomeSection === "home" ? "nav-active" : ""}
             onClick={() => navigate("home")}
           >
             Home
           </button>
 
-          <button onClick={() => navigate("home")}>Explore</button>
+          <button
+            className={page === "home" && activeHomeSection === "explore" ? "nav-active" : ""}
+            onClick={() => navigate("explore")}
+          >
+            Explore
+          </button>
           <button onClick={() => navigate("map")}>Map</button>
           <button onClick={() => navigate("for-you")}>For You</button>
 
@@ -738,19 +818,7 @@ const nearbyDestinations = useMemo(() => {
                     e.preventDefault();
                     setSearchOpen(false);
 
-                    if (page !== "home") {
-                      navigate("home");
-
-                      setTimeout(() => {
-                        document
-                          .getElementById("explore")
-                          ?.scrollIntoView({ behavior: "smooth" });
-                      }, 150);
-                    } else {
-                      document
-                        .getElementById("explore")
-                        ?.scrollIntoView({ behavior: "smooth" });
-                    }
+                    navigate("explore");
                   }
                 }}
                 autoFocus
@@ -828,24 +896,45 @@ const nearbyDestinations = useMemo(() => {
                   A JOURNEY THROUGH THE ARCHIPELAGO
                 </span>
 
-                <h1>
-                  DISCOVER
+                <h1
+                  className="hero-interactive-title"
+                  aria-label="DISCOVER INDONESIA"
+                  style={{
+                    display: "block",
+                    visibility: "visible",
+                    color: "#ffffff",
+                    opacity: 1,
+                    position: "relative",
+                    zIndex: 4,
+                    margin: "18px 0",
+                    fontSize: "clamp(3.5rem, 9vw, 8.5rem)",
+                    lineHeight: 0.88,
+                    letterSpacing: "-0.065em",
+                    fontWeight: 800,
+                  }}
+                >
+                  <span className="hero-interactive-word" aria-hidden="true">
+                    {Array.from("DISCOVER").map((letter, index) => (
+                      <span className="hero-title-letter" key={`discover-${index}`}>
+                        {letter}
+                      </span>
+                    ))}
+                  </span>
                   <br />
-                  <span>INDONESIA</span>
+                  <span className="hero-interactive-word" aria-hidden="true">
+                    {Array.from("INDONESIA").map((letter, index) => (
+                      <span className="hero-title-letter" key={`indonesia-${index}`}>
+                        {letter}
+                      </span>
+                    ))}
+                  </span>
                 </h1>
 
-                <p>
-                  Dari pegunungan hingga pantai tersembunyi, temukan keindahan
-                  alam, budaya, dan tempat luar biasa di seluruh Indonesia.
-                </p>
+                <p>{homeWelcome.description}</p>
 
                 <button
                   className="hero-button"
-                  onClick={() =>
-                    document
-                      .getElementById("explore")
-                      ?.scrollIntoView({ behavior: "smooth" })
-                  }
+                  onClick={() => navigate("explore")}
                 >
                   Explore <span>→</span>
                 </button>
@@ -872,122 +961,204 @@ const nearbyDestinations = useMemo(() => {
               </div>
             </section>
 
-            <section className="explore-section" id="explore">
-              <div className="section-top">
-                <div>
-                  <span className="eyebrow">FIND YOUR PLACE</span>
-                  <h2>Explore destinations</h2>
-                  <p>
-                    Temukan tempat menarik untuk perjalanan berikutnya.
-                  </p>
+            <section
+              className="explore-section home-intro-section"
+              id="home-introduction"
+              style={{ paddingTop: "72px", paddingBottom: "76px" }}
+            >
+              <div
+                className="section-top"
+                style={{ display: "block", maxWidth: "1240px", margin: "0 auto" }}
+              >
+                <div style={{ maxWidth: "1180px" }}>
+                  <span className="eyebrow">ABOUT INDONESIA</span>
+                  <h2
+                    style={{
+                      maxWidth: "900px",
+                      margin: "18px 0 20px",
+                      lineHeight: 1.15,
+                    }}
+                  >
+                    {homeWelcome.introTitle}
+                  </h2>
+
+                  <div
+                    className="home-intro-copy"
+                    style={{
+                      maxWidth: "1120px",
+                      color: "#68758a",
+                      fontSize: "17px",
+                      lineHeight: 1.85,
+                    }}
+                  >
+                    <p style={{ margin: "0 0 14px" }}>
+                      Indonesia adalah negara kepulauan yang membentang luas di antara Samudra Hindia dan Samudra Pasifik. Dari Sabang hingga Merauke, ribuan pulau membentuk bentang alam yang begitu beragam. Setiap wilayah memiliki karakter, suasana, dan keistimewaannya sendiri, menjadikan Indonesia sebagai tempat yang selalu menarik untuk dijelajahi.
+                    </p>
+                    <p style={{ margin: "0 0 14px" }}>
+                      Perjalanan di Indonesia dapat membawa siapa pun menikmati pantai dengan garis laut yang panjang, pulau-pulau tropis dengan air yang jernih, pegunungan yang diselimuti kabut, danau yang tenang, hingga hutan alami yang menyimpan keanekaragaman hayati. Ada tempat untuk mencari ketenangan, ada pula jalur petualangan bagi mereka yang ingin menjelajahi alam lebih dekat. Keindahan tersebut hadir dengan suasana yang berbeda di setiap musim dan di setiap daerah.
+                    </p>
+                    <p style={{ margin: "0 0 14px" }}>
+                      Indonesia juga menyimpan perjalanan budaya yang tidak kalah menarik. Candi dan situs bersejarah, kawasan kota lama, desa tradisional, rumah adat, serta berbagai peninggalan masa lalu memperlihatkan perjalanan panjang masyarakat Nusantara. Mengunjungi tempat-tempat tersebut bukan hanya tentang melihat bangunan atau pemandangan, tetapi juga memahami cerita, nilai, dan tradisi yang terus dijaga oleh masyarakat setempat.
+                    </p>
+                    <p style={{ margin: "0 0 14px" }}>
+                      Di setiap destinasi, pengalaman perjalanan dapat terasa berbeda. Menyaksikan matahari terbit dari kawasan pegunungan, menyusuri pesisir dengan perahu, berjalan di antara persawahan, menjelajahi pulau kecil, atau menikmati suasana sebuah desa dapat menjadi bagian dari cerita yang berkesan. Interaksi dengan lingkungan dan masyarakat lokal juga membuat perjalanan terasa lebih bermakna, sekaligus mengingatkan kita untuk menghormati adat, menjaga kebersihan, dan merawat alam yang dikunjungi.
+                    </p>
+                    <p style={{ margin: "0" }}>
+                      Melalui ExploreID, kamu dapat mulai mengenal beragam tempat menarik di Indonesia, menemukan inspirasi dari berbagai daerah, dan mencari destinasi yang sesuai dengan perjalanan impianmu. Jelajahi informasi setiap tempat, kenali keunikan wilayahnya, lalu rencanakan perjalanan dengan lebih matang. Karena setiap sudut Indonesia memiliki cerita, dan selalu ada pengalaman baru yang menunggu untuk ditemukan.
+                    </p>
+                  </div>
                 </div>
+              </div>
+            </section>
 
-                <span className="result-count">
-                  {filteredDestinations.length} destinations
-                </span>
+        {/* EXPLORE CATALOG */}
+          <section
+            id="explore-catalog"
+            className="inner-page explore-page explore-catalog-section"
+            style={{ scrollMarginTop: "100px" }}
+          >
+            <div className="section-top">
+              <div>
+                <span className="eyebrow">DISCOVER INDONESIA</span>
+                <h1 className="page-title">Explore destinations</h1>
+                <p className="page-subtitle">
+                  Jelajahi katalog destinasi dari berbagai daerah di Indonesia.
+                </p>
               </div>
 
-              <div className="filter-row">
-                <select
-                  className="filter-select"
-                  value={sortOrder}
-                  onChange={(event) => setSortOrder(event.target.value)}
-                >
-                  <option value="default">Default Order</option>
-                  <option value="price-low">Cheapest First</option>
-                  <option value="price-high">Most Expensive First</option>
-                  <option value="name-az">Name A–Z</option>
-                  <option value="name-za">Name Z–A</option>
-                </select>
+              <span className="result-count">
+                {filteredDestinations.length} destinations
+              </span>
+            </div>
 
-                <button
-                  className="reset-filter"
-                  onClick={() => {
-                    setCategory("All");
-                    setSearch("");
-                    setLocation("All");
-                    setMaxBudget("All");
-                    setSortOrder("default");
-                  }}
-                >
-                  Reset Filters
-                </button>
-              </div>
+            <div className="search-page-input">
+              <input
+                type="text"
+                placeholder="Cari nama destinasi atau lokasi..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </div>
 
-              <div className="destination-grid">
-                {filteredDestinations.length > 0 ? (
-                  currentDestinations.map((item) =>
-                    renderDestinationCard(item)
-                  )
-                ) : (
-                  <div className="empty-state">
-                    <h3>No destinations found</h3>
-                    <p>Coba kata kunci atau kategori lainnya.</p>
+            <div className="filter-row">
+              <select
+                className="filter-select"
+                value={category}
+                onChange={(event) => setCategory(event.target.value)}
+                aria-label="Filter kategori destinasi"
+              >
+                <option value="All">All Categories</option>
+                {Array.from(
+                  new Set(destinations.map((item) => item.category))
+                )
+                  .sort((a, b) => a.localeCompare(b, "id"))
+                  .map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+              </select>
 
-                    <button
-                      className="primary-button"
-                      onClick={() => {
-                        setSearch("");
-                        setCategory("All");
-                        setLocation("All");
-                        setMaxBudget("All");
-                        setSortOrder("default");
-                      }}
-                    >
-                      Reset search
-                    </button>
-                  </div>
-                )}
-              </div>
+              <select
+                className="filter-select"
+                value={sortOrder}
+                onChange={(event) => setSortOrder(event.target.value)}
+                aria-label="Urutkan destinasi"
+              >
+                <option value="default">Default Order</option>
+                <option value="price-low">Cheapest First</option>
+                <option value="price-high">Most Expensive First</option>
+                <option value="name-az">Name A–Z</option>
+                <option value="name-za">Name Z–A</option>
+              </select>
 
-              {totalPages > 1 && (
-                <div className="pagination">
-                  <button
-                    className="pagination-button"
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(1, prev - 1))
-                    }
-                    disabled={currentPage === 1}
-                  >
-                    ← Previous
-                  </button>
+              <button
+                className="reset-filter"
+                onClick={() => {
+                  setCategory("All");
+                  setSearch("");
+                  setLocation("All");
+                  setMaxBudget("All");
+                  setSortOrder("default");
+                }}
+              >
+                Reset Filters
+              </button>
+            </div>
 
-                  <div className="pagination-numbers">
-                    {Array.from(
-                      { length: totalPages },
-                      (_, index) => index + 1
-                    ).map((number) => (
-                      <button
-                        key={number}
-                        className={
-                          currentPage === number
-                            ? "pagination-number active"
-                            : "pagination-number"
-                        }
-                        onClick={() => setCurrentPage(number)}
-                      >
-                        {number}
-                      </button>
-                    ))}
-                  </div>
+            <div className="destination-grid">
+              {filteredDestinations.length > 0 ? (
+                currentDestinations.map((item) =>
+                  renderDestinationCard(item)
+                )
+              ) : (
+                <div className="empty-state">
+                  <h3>No destinations found</h3>
+                  <p>Coba kata kunci atau kategori lainnya.</p>
 
                   <button
-                    className="pagination-button"
-                    onClick={() =>
-                      setCurrentPage((prev) =>
-                        Math.min(totalPages, prev + 1)
-                      )
-                    }
-                    disabled={currentPage === totalPages}
+                    className="primary-button"
+                    onClick={() => {
+                      setSearch("");
+                      setCategory("All");
+                      setLocation("All");
+                      setMaxBudget("All");
+                      setSortOrder("default");
+                    }}
                   >
-                    Next →
+                    Reset search
                   </button>
                 </div>
               )}
-            </section>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  className="pagination-button"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                >
+                  ← Previous
+                </button>
+
+                <div className="pagination-numbers">
+                  {Array.from(
+                    { length: totalPages },
+                    (_, index) => index + 1
+                  ).map((number) => (
+                    <button
+                      key={number}
+                      className={
+                        currentPage === number
+                          ? "pagination-number active"
+                          : "pagination-number"
+                      }
+                      onClick={() => setCurrentPage(number)}
+                    >
+                      {number}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  className="pagination-button"
+                  onClick={() =>
+                    setCurrentPage((prev) =>
+                      Math.min(totalPages, prev + 1)
+                    )
+                  }
+                  disabled={currentPage === totalPages}
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </section>
           </>
         )}
-
         {/* DESTINATION DETAIL */}
         {page === "detail" && selected && (
           <section
@@ -1001,7 +1172,7 @@ const nearbyDestinations = useMemo(() => {
     }`}>
             <button
               className="back-button"
-              onClick={() => navigate("home")}
+              onClick={() => navigate("explore")}
             >
               ← Back to Explore
             </button>
