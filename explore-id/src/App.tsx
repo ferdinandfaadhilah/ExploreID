@@ -148,12 +148,44 @@ const homeWelcomeMessages = [
   },
 ];
 
+function slowScrollTo(targetY: number, duration = 1400) {
+  const startY = window.scrollY;
+  const distance = targetY - startY;
+  const startTime = performance.now();
+
+  function animate(currentTime: number) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    // Ease in-out supaya awal dan akhir lebih halus
+    const eased =
+      progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+    window.scrollTo(0, startY + distance * eased);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
 function App() {
   const [homeWelcome] = useState(
-    () => homeWelcomeMessages[Math.floor(Math.random() * homeWelcomeMessages.length)]
+    () =>
+      homeWelcomeMessages[
+        Math.floor(Math.random() * homeWelcomeMessages.length)
+      ]
   );
+
   const [page, setPage] = useState<Page>("home");
-  const [activeHomeSection, setActiveHomeSection] = useState<"home" | "explore">("home");
+  const [activeHomeSection, setActiveHomeSection] = useState<
+    "home" | "explore"
+  >("home");
+
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -161,7 +193,9 @@ function App() {
   const [maxBudget, setMaxBudget] = useState("All");
   const [sortOrder, setSortOrder] = useState("default");
   const [selected, setSelected] = useState<Destination | null>(null);
-  const [detailPhase, setDetailPhase] = useState<"exit" | "enter" | null>(null);
+  const [detailPhase, setDetailPhase] = useState<
+    "exit" | "enter" | null
+  >(null);
 
   useEffect(() => {
     const updateActiveSection = () => {
@@ -170,19 +204,25 @@ function App() {
         return;
       }
 
-      const exploreSection = document.getElementById("explore-catalog");
+      const exploreSection =
+        document.getElementById("explore-catalog");
+
       if (!exploreSection) {
         setActiveHomeSection("home");
         return;
       }
 
       setActiveHomeSection(
-        exploreSection.getBoundingClientRect().top <= 140 ? "explore" : "home"
+        exploreSection.getBoundingClientRect().top <= 140
+          ? "explore"
+          : "home"
       );
     };
 
     updateActiveSection();
-    window.addEventListener("scroll", updateActiveSection, { passive: true });
+    window.addEventListener("scroll", updateActiveSection, {
+      passive: true,
+    });
     window.addEventListener("resize", updateActiveSection);
 
     return () => {
@@ -192,39 +232,43 @@ function App() {
   }, [page]);
 
   const { user, loading: authLoading, signOut } = useAuth();
-  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
-useEffect(() => {
-  if (!user) {
-    setProfileAvatar(null);
-    return;
-  }
 
-  const userId = user.id;
-  let active = true;
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(
+    null
+  );
 
-  async function loadAvatar() {
-    const { data, error } = await supabase
-      .from("user_profiles")
+  useEffect(() => {
+    if (!user) {
+      setProfileAvatar(null);
+      return;
+    }
+
+    const userId = user.id;
+    let active = true;
+
+    async function loadAvatar() {
+      const { data, error } = await supabase
+        .from("user_profiles")
       .select("avatar_url")
       .eq("id", userId)
       .maybeSingle();
 
-    if (error) {
-      console.error("Gagal mengambil foto profil:", error);
-      return;
+      if (error) {
+        console.error("Gagal mengambil foto profil:", error);
+        return;
+      }
+
+      if (active) {
+        setProfileAvatar(data?.avatar_url || null);
+      }
     }
 
-    if (active) {
-      setProfileAvatar(data?.avatar_url || null);
-    }
-  }
+    loadAvatar();
 
-  loadAvatar();
-
-  return () => {
-    active = false;
-  };
-}, [user]);
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   const accountName =
     user?.user_metadata?.full_name ||
@@ -239,9 +283,6 @@ useEffect(() => {
       .map((part: string) => part[0]?.toUpperCase())
       .join("") || "ME";
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 24;
-
   const [favorites, setFavorites] = useState<number[]>(() => {
     try {
       const saved = localStorage.getItem("exploreid-favorites");
@@ -253,7 +294,9 @@ useEffect(() => {
 
   const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
     try {
-      const saved = localStorage.getItem("exploreid-recently-viewed");
+      const saved = localStorage.getItem(
+        "exploreid-recently-viewed"
+      );
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -333,10 +376,11 @@ useEffect(() => {
   }, [recentlyViewed]);
 
   // WEATHER
-  useEffect(() => {
-    if (page !== "detail" || !selected) return;
+useEffect(() => {
+  if (page !== "detail" || !selected) return;
 
-    const controller = new AbortController();
+  const destination = selected;
+  const controller = new AbortController();
 
     async function fetchWeather() {
       setWeather(null);
@@ -344,7 +388,7 @@ useEffect(() => {
       setWeatherLoading(true);
 
       try {
-        const [latitude, longitude] = selected!.position;
+        const [latitude, longitude] = destination.position;
 
         const url =
           `https://api.open-meteo.com/v1/forecast?latitude=${latitude}` +
@@ -393,10 +437,11 @@ useEffect(() => {
   }, [page, selected, weatherRetry]);
 
   // LOAD REVIEWS
-  useEffect(() => {
-    if (page !== "detail" || !selected) return;
+useEffect(() => {
+  if (page !== "detail" || !selected) return;
 
-    let active = true;
+  const destination = selected;
+  let active = true;
 
     async function loadReviews() {
       setReviews([]);
@@ -406,7 +451,7 @@ useEffect(() => {
       const { data, error } = await supabase
         .from("destination_reviews")
         .select("*")
-        .eq("destination_id", selected!.id)
+        .eq("destination_id", destination.id)
         .order("created_at", { ascending: false });
 
       if (!active) return;
@@ -442,7 +487,8 @@ useEffect(() => {
           location === "All" || item.location.includes(location);
 
         const matchesBudget =
-          maxBudget === "All" || item.budget <= Number(maxBudget);
+          maxBudget === "All" ||
+          item.budget <= Number(maxBudget);
 
         return (
           matchesCategory &&
@@ -471,20 +517,31 @@ useEffect(() => {
       });
   }, [category, search, location, maxBudget, sortOrder]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, category, location, maxBudget, sortOrder]);
+  // EXPLORE CATEGORY SECTIONS
+  const exploreSections = useMemo(() => {
+    const popular = filteredDestinations.slice(0, 6);
 
-  const totalPages = Math.ceil(
-    filteredDestinations.length / itemsPerPage
-  );
+    const categories = Array.from(
+      new Set(filteredDestinations.map((item) => item.category))
+    );
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
+    const categorySections = categories.map((category) => ({
+      title: category,
+      items: filteredDestinations.filter(
+        (item) => item.category === category
+      ),
+    }));
 
-  const currentDestinations = filteredDestinations.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+    return [
+      {
+        title: "Popular Destinations",
+        items: popular,
+      },
+      ...categorySections.filter(
+        (section) => section.items.length > 0
+      ),
+    ];
+  }, [filteredDestinations]);
 
   const favoriteDestinations = destinations.filter((item) =>
     favorites.includes(item.id)
@@ -498,29 +555,27 @@ useEffect(() => {
     ? destinationGuides[selected.id] || defaultDestinationGuide
     : defaultDestinationGuide;
 
+  const nearbyDestinations = useMemo(() => {
+    if (!selected) return [];
 
-
-const nearbyDestinations = useMemo(() => {
-  if (!selected) return [];
-
-  return destinations
-    .filter((item) => item.id !== selected.id)
-    .map((item) => ({
-      item,
-      distance: calculateDistance(
-        selected.position,
-        item.position
-      ),
-    }))
-    .sort((a, b) => a.distance - b.distance);
-}, [selected, destinations]);
-
-
+    return destinations
+      .filter((item) => item.id !== selected.id)
+      .map((item) => ({
+        item,
+        distance: calculateDistance(
+          selected.position,
+          item.position
+        ),
+      }))
+      .sort((a, b) => a.distance - b.distance);
+  }, [selected, destinations]);
 
   const averageRating =
     reviews.length > 0
-      ? reviews.reduce((total, review) => total + review.rating, 0) /
-        reviews.length
+      ? reviews.reduce(
+          (total, review) => total + review.rating,
+          0
+        ) / reviews.length
       : 0;
 
   function navigate(nextPage: Page) {
@@ -575,7 +630,7 @@ const nearbyDestinations = useMemo(() => {
     }
   }
 
-    // OPEN DETAIL AND SAVE RECENTLY VIEWED
+  // OPEN DETAIL AND SAVE RECENTLY VIEWED
   async function openDetail(
     item: Destination,
     withTransition = false
@@ -762,20 +817,39 @@ const nearbyDestinations = useMemo(() => {
 
         <nav className="nav-links">
           <button
-            className={page === "home" && activeHomeSection === "home" ? "nav-active" : ""}
+            className={
+              page === "home" && activeHomeSection === "home"
+                ? "nav-active"
+                : ""
+            }
             onClick={() => navigate("home")}
           >
             Home
           </button>
 
           <button
-            className={page === "home" && activeHomeSection === "explore" ? "nav-active" : ""}
+            className={
+              page === "home" && activeHomeSection === "explore"
+                ? "nav-active"
+                : ""
+            }
             onClick={() => navigate("explore")}
           >
             Explore
           </button>
-          <button onClick={() => navigate("map")}>Map</button>
-          <button onClick={() => navigate("for-you")}>For You</button>
+
+<button
+  className={page === "map" ? "nav-active" : ""}
+  onClick={() => navigate("map")}
+>
+  Map
+</button>
+<button
+  className={page === "for-you" ? "nav-active" : ""}
+  onClick={() => navigate("for-you")}
+>
+  For You
+</button>
 
           <button
             className={page === "recently-viewed" ? "nav-active" : ""}
@@ -784,47 +858,58 @@ const nearbyDestinations = useMemo(() => {
             Recent
           </button>
 
-          <div className="nav-search-wrap">
-            <button
-              className="nav-search"
-              aria-label="Search"
-              onClick={() => setSearchOpen(!searchOpen)}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-4-4" />
-              </svg>
-            </button>
+<div
+className={`nav-search-wrap ${searchOpen ? "search-open" : ""}`}
+onMouseEnter={() => setSearchOpen(true)}
+onMouseLeave={() => {
+  if (!search.trim()) {
+    setSearchOpen(false);
+  }
+}}
+>
+  <button
+    className="nav-search"
+    aria-label="Search"
+    onClick={() => setSearchOpen(true)}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-4-4" />
+    </svg>
+  </button>
 
-            {searchOpen && (
-              <input
-                className="nav-search-input"
-                type="text"
-                placeholder="Cari destinasi..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    setSearchOpen(false);
+  {searchOpen && (
+    <input
+      className="nav-search-input"
+      type="text"
+      placeholder="Cari destinasi..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          setSearchOpen(false);
+          navigate("explore");
+        }
 
-                    navigate("explore");
-                  }
-                }}
-                autoFocus
-              />
-            )}
-          </div>
+        if (e.key === "Escape") {
+          setSearchOpen(false);
+        }
+      }}
+      autoFocus
+    />
+  )}
+</div>
         </nav>
 
         <div className="nav-actions">
@@ -836,21 +921,21 @@ const nearbyDestinations = useMemo(() => {
           </button>
 
           {user ? (
-<button
-  className="profile-nav"
-  onClick={() => navigate("profile")}
-  title="Open profile"
->
-  {profileAvatar ? (
-    <img
-      src={profileAvatar}
-      alt="Foto profil"
-      className="profile-nav-image"
-    />
-  ) : (
-    accountInitials
-  )}
-</button>
+            <button
+              className="profile-nav"
+              onClick={() => navigate("profile")}
+              title="Open profile"
+            >
+              {profileAvatar ? (
+                <img
+                  src={profileAvatar}
+                  alt="Foto profil"
+                  className="profile-nav-image"
+                />
+              ) : (
+                accountInitials
+              )}
+            </button>
           ) : (
             <>
               <button
@@ -881,7 +966,9 @@ const nearbyDestinations = useMemo(() => {
 
         {page === "home" && (
           <>
+            {/* HERO */}
             <section className="hero hero-discover">
+
               <img
                 className="hero-background"
                 src="https://images.unsplash.com/photo-1650445332429-75ceee3f3226?auto=format&fit=crop&w=2400&q=95"
@@ -915,7 +1002,10 @@ const nearbyDestinations = useMemo(() => {
                 >
                   <span className="hero-interactive-word" aria-hidden="true">
                     {Array.from("DISCOVER").map((letter, index) => (
-                      <span className="hero-title-letter" key={`discover-${index}`}>
+                      <span
+                        className="hero-title-letter"
+                        key={`discover-${index}`}
+                      >
                         {letter}
                       </span>
                     ))}
@@ -923,7 +1013,10 @@ const nearbyDestinations = useMemo(() => {
                   <br />
                   <span className="hero-interactive-word" aria-hidden="true">
                     {Array.from("INDONESIA").map((letter, index) => (
-                      <span className="hero-title-letter" key={`indonesia-${index}`}>
+                      <span
+                        className="hero-title-letter"
+                        key={`indonesia-${index}`}
+                      >
                         {letter}
                       </span>
                     ))}
@@ -940,7 +1033,10 @@ const nearbyDestinations = useMemo(() => {
                 </button>
               </div>
 
-              <div className="hero-destination-rail" aria-label="Pilihan destinasi Indonesia">
+              <div
+                className="hero-destination-rail"
+                aria-label="Pilihan destinasi Indonesia"
+              >
                 {destinations.map((item) => (
                   <button
                     className="hero-destination-card"
@@ -961,6 +1057,7 @@ const nearbyDestinations = useMemo(() => {
               </div>
             </section>
 
+            {/* HOME INTRODUCTION */}
             <section
               className="explore-section home-intro-section"
               id="home-introduction"
@@ -968,7 +1065,11 @@ const nearbyDestinations = useMemo(() => {
             >
               <div
                 className="section-top"
-                style={{ display: "block", maxWidth: "1240px", margin: "0 auto" }}
+                style={{
+                  display: "block",
+                  maxWidth: "1240px",
+                  margin: "0 auto",
+                }}
               >
                 <div style={{ maxWidth: "1180px" }}>
                   <span className="eyebrow">ABOUT INDONESIA</span>
@@ -992,105 +1093,176 @@ const nearbyDestinations = useMemo(() => {
                     }}
                   >
                     <p style={{ margin: "0 0 14px" }}>
-                      Indonesia adalah negara kepulauan yang membentang luas di antara Samudra Hindia dan Samudra Pasifik. Dari Sabang hingga Merauke, ribuan pulau membentuk bentang alam yang begitu beragam. Setiap wilayah memiliki karakter, suasana, dan keistimewaannya sendiri, menjadikan Indonesia sebagai tempat yang selalu menarik untuk dijelajahi.
+                      Indonesia adalah negara kepulauan yang membentang luas di
+                      antara Samudra Hindia dan Samudra Pasifik. Dari Sabang
+                      hingga Merauke, ribuan pulau membentuk bentang alam yang
+                      begitu beragam. Setiap wilayah memiliki karakter, suasana,
+                      dan keistimewaannya sendiri, menjadikan Indonesia sebagai
+                      tempat yang selalu menarik untuk dijelajahi.
                     </p>
+
                     <p style={{ margin: "0 0 14px" }}>
-                      Perjalanan di Indonesia dapat membawa siapa pun menikmati pantai dengan garis laut yang panjang, pulau-pulau tropis dengan air yang jernih, pegunungan yang diselimuti kabut, danau yang tenang, hingga hutan alami yang menyimpan keanekaragaman hayati. Ada tempat untuk mencari ketenangan, ada pula jalur petualangan bagi mereka yang ingin menjelajahi alam lebih dekat. Keindahan tersebut hadir dengan suasana yang berbeda di setiap musim dan di setiap daerah.
+                      Perjalanan di Indonesia dapat membawa siapa pun menikmati
+                      pantai dengan garis laut yang panjang, pulau-pulau tropis
+                      dengan air yang jernih, pegunungan yang diselimuti kabut,
+                      danau yang tenang, hingga hutan alami yang menyimpan
+                      keanekaragaman hayati. Ada tempat untuk mencari
+                      ketenangan, ada pula jalur petualangan bagi mereka yang
+                      ingin menjelajahi alam lebih dekat. Keindahan tersebut
+                      hadir dengan suasana yang berbeda di setiap musim dan di
+                      setiap daerah.
                     </p>
+
                     <p style={{ margin: "0 0 14px" }}>
-                      Indonesia juga menyimpan perjalanan budaya yang tidak kalah menarik. Candi dan situs bersejarah, kawasan kota lama, desa tradisional, rumah adat, serta berbagai peninggalan masa lalu memperlihatkan perjalanan panjang masyarakat Nusantara. Mengunjungi tempat-tempat tersebut bukan hanya tentang melihat bangunan atau pemandangan, tetapi juga memahami cerita, nilai, dan tradisi yang terus dijaga oleh masyarakat setempat.
+                      Indonesia juga menyimpan perjalanan budaya yang tidak
+                      kalah menarik. Candi dan situs bersejarah, kawasan kota
+                      lama, desa tradisional, rumah adat, serta berbagai
+                      peninggalan masa lalu memperlihatkan perjalanan panjang
+                      masyarakat Nusantara. Mengunjungi tempat-tempat tersebut
+                      bukan hanya tentang melihat bangunan atau pemandangan,
+                      tetapi juga memahami cerita, nilai, dan tradisi yang terus
+                      dijaga oleh masyarakat setempat.
                     </p>
+
                     <p style={{ margin: "0 0 14px" }}>
-                      Di setiap destinasi, pengalaman perjalanan dapat terasa berbeda. Menyaksikan matahari terbit dari kawasan pegunungan, menyusuri pesisir dengan perahu, berjalan di antara persawahan, menjelajahi pulau kecil, atau menikmati suasana sebuah desa dapat menjadi bagian dari cerita yang berkesan. Interaksi dengan lingkungan dan masyarakat lokal juga membuat perjalanan terasa lebih bermakna, sekaligus mengingatkan kita untuk menghormati adat, menjaga kebersihan, dan merawat alam yang dikunjungi.
+                      Di setiap destinasi, pengalaman perjalanan dapat terasa
+                      berbeda. Menyaksikan matahari terbit dari kawasan
+                      pegunungan, menyusuri pesisir dengan perahu, berjalan
+                      di antara persawahan, menjelajahi pulau kecil, atau
+                      menikmati suasana sebuah desa dapat menjadi bagian dari
+                      cerita yang berkesan. Interaksi dengan lingkungan dan
+                      masyarakat lokal juga membuat perjalanan terasa lebih
+                      bermakna, sekaligus mengingatkan kita untuk menghormati
+                      adat, menjaga kebersihan, dan merawat alam yang
+                      dikunjungi.
                     </p>
+
                     <p style={{ margin: "0" }}>
-                      Melalui ExploreID, kamu dapat mulai mengenal beragam tempat menarik di Indonesia, menemukan inspirasi dari berbagai daerah, dan mencari destinasi yang sesuai dengan perjalanan impianmu. Jelajahi informasi setiap tempat, kenali keunikan wilayahnya, lalu rencanakan perjalanan dengan lebih matang. Karena setiap sudut Indonesia memiliki cerita, dan selalu ada pengalaman baru yang menunggu untuk ditemukan.
+                      Melalui ExploreID, kamu dapat mulai mengenal beragam
+                      tempat menarik di Indonesia, menemukan inspirasi dari
+                      berbagai daerah, dan mencari destinasi yang sesuai dengan
+                      perjalanan impianmu. Jelajahi informasi setiap tempat,
+                      kenali keunikan wilayahnya, lalu rencanakan perjalanan
+                      dengan lebih matang. Karena setiap sudut Indonesia
+                      memiliki cerita, dan selalu ada pengalaman baru yang
+                      menunggu untuk ditemukan.
                     </p>
                   </div>
                 </div>
               </div>
             </section>
 
-        {/* EXPLORE CATALOG */}
-          <section
-            id="explore-catalog"
-            className="inner-page explore-page explore-catalog-section"
-            style={{ scrollMarginTop: "100px" }}
-          >
-            <div className="section-top">
-              <div>
-                <span className="eyebrow">DISCOVER INDONESIA</span>
-                <h1 className="page-title">Explore destinations</h1>
-                <p className="page-subtitle">
-                  Jelajahi katalog destinasi dari berbagai daerah di Indonesia.
-                </p>
+            {/* EXPLORE CATALOG */}
+            <section
+              id="explore-catalog"
+              className="inner-page explore-page explore-catalog-section"
+              style={{ scrollMarginTop: "100px" }}
+            >
+              <div className="section-top">
+                <div>
+                  <span className="eyebrow">DISCOVER INDONESIA</span>
+                  <h1 className="page-title">Explore destinations</h1>
+                  <p className="page-subtitle">
+                    Jelajahi katalog destinasi dari berbagai daerah di Indonesia.
+                  </p>
+                </div>
+
+                <span className="result-count">
+                  {filteredDestinations.length} destinations
+                </span>
               </div>
 
-              <span className="result-count">
-                {filteredDestinations.length} destinations
-              </span>
-            </div>
+              {/* SEARCH */}
+              <div className="search-page-input">
+                <input
+                  type="text"
+                  placeholder="Cari nama destinasi atau lokasi..."
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </div>
 
-            <div className="search-page-input">
-              <input
-                type="text"
-                placeholder="Cari nama destinasi atau lokasi..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </div>
+              {/* FILTER */}
+              <div className="filter-row">
+                <select
+                  className="filter-select"
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                  aria-label="Filter kategori destinasi"
+                >
+                  <option value="All">All Categories</option>
+                  {Array.from(
+                    new Set(destinations.map((item) => item.category))
+                  )
+                    .sort((a, b) => a.localeCompare(b, "id"))
+                    .map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                </select>
 
-            <div className="filter-row">
-              <select
-                className="filter-select"
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-                aria-label="Filter kategori destinasi"
-              >
-                <option value="All">All Categories</option>
-                {Array.from(
-                  new Set(destinations.map((item) => item.category))
-                )
-                  .sort((a, b) => a.localeCompare(b, "id"))
-                  .map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-              </select>
+                <select
+                  className="filter-select"
+                  value={sortOrder}
+                  onChange={(event) => setSortOrder(event.target.value)}
+                  aria-label="Urutkan destinasi"
+                >
+                  <option value="default">Default Order</option>
+                  <option value="price-low">Cheapest First</option>
+                  <option value="price-high">Most Expensive First</option>
+                  <option value="name-az">Name A–Z</option>
+                  <option value="name-za">Name Z–A</option>
+                </select>
 
-              <select
-                className="filter-select"
-                value={sortOrder}
-                onChange={(event) => setSortOrder(event.target.value)}
-                aria-label="Urutkan destinasi"
-              >
-                <option value="default">Default Order</option>
-                <option value="price-low">Cheapest First</option>
-                <option value="price-high">Most Expensive First</option>
-                <option value="name-az">Name A–Z</option>
-                <option value="name-za">Name Z–A</option>
-              </select>
+                <button
+                  className="reset-filter"
+                  onClick={() => {
+                    setCategory("All");
+                    setSearch("");
+                    setLocation("All");
+                    setMaxBudget("All");
+                    setSortOrder("default");
+                  }}
+                >
+                  Reset Filters
+                </button>
+              </div>
 
-              <button
-                className="reset-filter"
-                onClick={() => {
-                  setCategory("All");
-                  setSearch("");
-                  setLocation("All");
-                  setMaxBudget("All");
-                  setSortOrder("default");
-                }}
-              >
-                Reset Filters
-              </button>
-            </div>
-
-            <div className="destination-grid">
+              {/* CATEGORY CAROUSELS */}
               {filteredDestinations.length > 0 ? (
-                currentDestinations.map((item) =>
-                  renderDestinationCard(item)
-                )
+                <div className="explore-category-list">
+                  {exploreSections.map((section, index) => (
+                    <section
+                      className="explore-category-section"
+                      key={section.title}
+                    >
+                      <div className="explore-category-heading">
+                        <div>
+                          <span className="eyebrow">
+                            {index === 0
+                              ? "HANDPICKED PLACES"
+                              : "EXPLORE BY CATEGORY"}
+                          </span>
+
+                          <h2>{section.title}</h2>
+
+                          <p>
+                            {section.items.length} destinations to discover
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="explore-horizontal-wrap">
+                        <div className="explore-horizontal-track">
+                          {section.items.map((item) =>
+                            renderDestinationCard(item)
+                          )}
+                        </div>
+                      </div>
+                    </section>
+                  ))}
+                </div>
               ) : (
                 <div className="empty-state">
                   <h3>No destinations found</h3>
@@ -1110,66 +1282,22 @@ const nearbyDestinations = useMemo(() => {
                   </button>
                 </div>
               )}
-            </div>
-
-            {totalPages > 1 && (
-              <div className="pagination">
-                <button
-                  className="pagination-button"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                  disabled={currentPage === 1}
-                >
-                  ← Previous
-                </button>
-
-                <div className="pagination-numbers">
-                  {Array.from(
-                    { length: totalPages },
-                    (_, index) => index + 1
-                  ).map((number) => (
-                    <button
-                      key={number}
-                      className={
-                        currentPage === number
-                          ? "pagination-number active"
-                          : "pagination-number"
-                      }
-                      onClick={() => setCurrentPage(number)}
-                    >
-                      {number}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  className="pagination-button"
-                  onClick={() =>
-                    setCurrentPage((prev) =>
-                      Math.min(totalPages, prev + 1)
-                    )
-                  }
-                  disabled={currentPage === totalPages}
-                >
-                  Next →
-                </button>
-              </div>
-            )}
-          </section>
+            </section>
           </>
         )}
+
         {/* DESTINATION DETAIL */}
         {page === "detail" && selected && (
           <section
             key={selected.id}
             className={`inner-page destination-detail-page ${
-      detailPhase === "exit"
-        ? "detail-exit"
-        : detailPhase === "enter"
-        ? "detail-enter"
-        : ""
-    }`}>
+              detailPhase === "exit"
+                ? "detail-exit"
+                : detailPhase === "enter"
+                ? "detail-enter"
+                : ""
+            }`}
+          >
             <button
               className="back-button"
               onClick={() => navigate("explore")}
@@ -1194,8 +1322,8 @@ const nearbyDestinations = useMemo(() => {
                   <span>Estimated price</span>
                   <strong>{selected.price}</strong>
                   <small>
-                    Estimasi biaya dapat berubah sesuai kebijakan
-                    pengelola dan kebutuhan perjalanan.
+                    Estimasi biaya dapat berubah sesuai kebijakan pengelola
+                    dan kebutuhan perjalanan.
                   </small>
                 </div>
 
@@ -1230,8 +1358,8 @@ const nearbyDestinations = useMemo(() => {
                   <span className="eyebrow">DESTINATION OVERVIEW</span>
                   <h2>Get to know this place</h2>
                   <p>
-                    Kenali informasi penting tentang {selected.name}
-                    sebelum merencanakan perjalanan.
+                    Kenali informasi penting tentang {selected.name} sebelum
+                    merencanakan perjalanan.
                   </p>
                 </div>
               </div>
@@ -1261,8 +1389,8 @@ const nearbyDestinations = useMemo(() => {
                     <small>Estimated Budget</small>
                     <h3>{selected.price}</h3>
                     <p>
-                      Perkiraan biaya berdasarkan katalog ExploreID,
-                      bukan harga tiket resmi.
+                      Perkiraan biaya berdasarkan katalog ExploreID, bukan harga
+                      tiket resmi.
                     </p>
                   </div>
                 </article>
@@ -1290,81 +1418,75 @@ const nearbyDestinations = useMemo(() => {
               </div>
             </section>
 
-
-{/* TICKET INFORMATION */}
-<section className="ticket-information-section">
-  <div className="section-top">
-    <div>
-      <span className="eyebrow">TICKET INFORMATION</span>
-      <h2>Plan your visit</h2>
-      <p>
-        Informasi tiket untuk {selected.name}.
-        Periksa informasi terbaru sebelum berkunjung.
-      </p>
-    </div>
-  </div>
-
-  <div className="ticket-information-card">
-    <div className="ticket-information-icon">
-      🎟️
-    </div>
-
-    <div className="ticket-information-content">
-      <span>OFFICIAL TICKET INFORMATION</span>
-
-      <h3>
-        {ticketInformation[selected.id]?.ticketPrice ||
-          "Informasi tiket belum tersedia"}
-      </h3>
-
-      <p>
-        {ticketInformation[selected.id]?.ticketNote ||
-          "Kanal pembelian tiket resmi untuk destinasi ini belum tersedia di ExploreID."}
-      </p>
-
-      {ticketInformation[selected.id]?.ticketUrl && (
-        <a
-          href={ticketInformation[selected.id].ticketUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="primary-button"
-        >
-          Check Official Tickets ↗
-        </a>
-      )}
-
-      <p className="ticket-unavailable">
-        Harga dan ketersediaan tiket mengikuti informasi dari pengelola.
-      </p>
-    </div>
-  </div>
-</section>
-
-
-            {/* TICKET INFORMATION */}
+            {/* TICKET INFORMATION - ticketInformation DATA */}
             <section className="ticket-information-section">
               <div className="section-top">
                 <div>
                   <span className="eyebrow">TICKET INFORMATION</span>
                   <h2>Plan your visit</h2>
                   <p>
-                    Informasi tiket untuk {selected.name}.
-                    Periksa informasi terbaru sebelum berkunjung.
+                    Informasi tiket untuk {selected.name}. Periksa informasi
+                    terbaru sebelum berkunjung.
                   </p>
                 </div>
               </div>
 
               <div className="ticket-information-card">
-                <div className="ticket-information-icon">
-                  🎟️
+                <div className="ticket-information-icon">🎟️</div>
+
+                <div className="ticket-information-content">
+                  <span>OFFICIAL TICKET INFORMATION</span>
+
+                  <h3>
+                    {ticketInformation[selected.id]?.ticketPrice ||
+                      "Informasi tiket belum tersedia"}
+                  </h3>
+
+                  <p>
+                    {ticketInformation[selected.id]?.ticketNote ||
+                      "Kanal pembelian tiket resmi untuk destinasi ini belum tersedia di ExploreID."}
+                  </p>
+
+                  {ticketInformation[selected.id]?.ticketUrl && (
+                    <a
+                      href={ticketInformation[selected.id].ticketUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="primary-button"
+                    >
+                      Check Official Tickets ↗
+                    </a>
+                  )}
+
+                  <p className="ticket-unavailable">
+                    Harga dan ketersediaan tiket mengikuti informasi dari
+                    pengelola.
+                  </p>
                 </div>
+              </div>
+            </section>
+
+            {/* TICKET INFORMATION - SELECTED DESTINATION DATA */}
+            <section className="ticket-information-section">
+              <div className="section-top">
+                <div>
+                  <span className="eyebrow">TICKET INFORMATION</span>
+                  <h2>Plan your visit</h2>
+                  <p>
+                    Informasi tiket untuk {selected.name}. Periksa informasi
+                    terbaru sebelum berkunjung.
+                  </p>
+                </div>
+              </div>
+
+              <div className="ticket-information-card">
+                <div className="ticket-information-icon">🎟️</div>
 
                 <div className="ticket-information-content">
                   <span>OFFICIAL TICKET PRICE</span>
 
                   <h3>
-                    {selected.ticketPrice ||
-                      "Informasi belum tersedia"}
+                    {selected.ticketPrice || "Informasi belum tersedia"}
                   </h3>
 
                   <p>
@@ -1390,79 +1512,27 @@ const nearbyDestinations = useMemo(() => {
               </div>
             </section>
 
-            {/* TICKET INFORMATION */}
+            {/* TICKET INFORMATION - SECOND EXISTING SECTION */}
             <section className="ticket-information-section">
               <div className="section-top">
                 <div>
                   <span className="eyebrow">TICKET INFORMATION</span>
                   <h2>Plan your visit</h2>
                   <p>
-                    Informasi tiket untuk {selected.name}.
-                    Periksa informasi terbaru sebelum berkunjung.
+                    Informasi tiket untuk {selected.name}. Periksa informasi
+                    terbaru sebelum berkunjung.
                   </p>
                 </div>
               </div>
 
               <div className="ticket-information-card">
-                <div className="ticket-information-icon">
-                  🎟️
-                </div>
+                <div className="ticket-information-icon">🎟️</div>
 
                 <div className="ticket-information-content">
                   <span>OFFICIAL TICKET PRICE</span>
 
                   <h3>
-                    {selected.ticketPrice ||
-                      "Informasi belum tersedia"}
-                  </h3>
-
-                  <p>
-                    {selected.ticketNote ||
-                      "Harga tiket belum tersedia dalam katalog ExploreID. Harga dapat berubah sesuai kebijakan pengelola."}
-                  </p>
-
-                  {selected.ticketUrl ? (
-                    <a
-                      href={selected.ticketUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="primary-button"
-                    >
-                      Check Official Tickets ↗
-                    </a>
-                  ) : (
-                    <p className="ticket-unavailable">
-                      Tautan tiket resmi belum tersedia.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </section>
-
-            {/* TICKET INFORMATION */}
-            <section className="ticket-information-section">
-              <div className="section-top">
-                <div>
-                  <span className="eyebrow">TICKET INFORMATION</span>
-                  <h2>Plan your visit</h2>
-                  <p>
-                    Informasi tiket untuk {selected.name}.
-                    Periksa informasi terbaru sebelum berkunjung.
-                  </p>
-                </div>
-              </div>
-
-              <div className="ticket-information-card">
-                <div className="ticket-information-icon">
-                  🎟️
-                </div>
-
-                <div className="ticket-information-content">
-                  <span>OFFICIAL TICKET PRICE</span>
-
-                  <h3>
-                    {selected.ticketPrice ||
-                      "Informasi belum tersedia"}
+                    {selected.ticketPrice || "Informasi belum tersedia"}
                   </h3>
 
                   <p>
@@ -1506,8 +1576,7 @@ const nearbyDestinations = useMemo(() => {
                     <div>
                       <strong>Destination Highlights</strong>
                       <p>
-                        Hal menarik yang menjadi daya tarik utama
-                        destinasi ini.
+                        Hal menarik yang menjadi daya tarik utama destinasi ini.
                       </p>
                       <ul>
                         {selectedGuide.highlights.map((text, index) => (
@@ -1522,8 +1591,7 @@ const nearbyDestinations = useMemo(() => {
                     <div>
                       <strong>Things to Do</strong>
                       <p>
-                        Aktivitas yang dapat kamu pertimbangkan
-                        saat berkunjung.
+                        Aktivitas yang dapat kamu pertimbangkan saat berkunjung.
                       </p>
                       <ul>
                         {selectedGuide.activities.map((text, index) => (
@@ -1554,8 +1622,8 @@ const nearbyDestinations = useMemo(() => {
                     <div>
                       <strong>Travel Tips</strong>
                       <p>
-                        Beberapa hal yang perlu diperhatikan
-                        sebelum dan selama perjalanan.
+                        Beberapa hal yang perlu diperhatikan sebelum dan
+                        selama perjalanan.
                       </p>
                       <ul>
                         {selectedGuide.tips.map((text, index) => (
@@ -1574,9 +1642,7 @@ const nearbyDestinations = useMemo(() => {
                 <div>
                   <span className="eyebrow">PHOTO PREVIEW</span>
                   <h2>Destination Gallery</h2>
-                  <p>
-                    Foto utama destinasi dari katalog ExploreID.
-                  </p>
+                  <p>Foto utama destinasi dari katalog ExploreID.</p>
                 </div>
               </div>
 
@@ -1593,55 +1659,49 @@ const nearbyDestinations = useMemo(() => {
               </div>
             </section>
 
+            {/* NEARBY DESTINATIONS */}
+            <section className="nearby-section">
+              <div className="section-top">
+                <div>
+                  <span className="eyebrow">EXPLORE MORE</span>
+                  <h2>Nearby destinations</h2>
+                  <p>
+                    Destinasi lain dengan koordinat terdekat dari{" "}
+                    {selected.name}.
+                  </p>
+                </div>
+              </div>
 
-{/* NEARBY DESTINATIONS */}
-<section className="nearby-section">
-  <div className="section-top">
-    <div>
-      <span className="eyebrow">EXPLORE MORE</span>
-      <h2>Nearby destinations</h2>
-      <p>
-        Destinasi lain dengan koordinat terdekat dari{" "}
-        {selected.name}.
-      </p>
-    </div>
-  </div>
+              <div className="destination-grid">
+                {nearbyDestinations.map(({ item, distance }) => (
+                  <article className="destination-card" key={item.id}>
+                    <div className="card-image">
+                      <img src={item.image} alt={item.name} />
 
-  <div className="destination-grid">
-    {nearbyDestinations.map(({ item, distance }) => (
-      <article className="destination-card" key={item.id}>
-        <div className="card-image">
-          <img src={item.image} alt={item.name} />
+                      <div className="card-image-overlay">
+                        <div className="card-content">
+                          <span className="tag">{item.category}</span>
+                          <h3>{item.name}</h3>
+                          <p className="location">⌖ {item.location}</p>
 
-          <div className="card-image-overlay">
-            <div className="card-content">
-              <span className="tag">{item.category}</span>
+                          <p className="nearby-distance">
+                            Sekitar {distance.toFixed(1)} km berdasarkan
+                            jarak koordinat.
+                          </p>
 
-              <h3>{item.name}</h3>
-
-              <p className="location">
-                ⌖ {item.location}
-              </p>
-
-              <p className="nearby-distance">
-                Sekitar {distance.toFixed(1)} km berdasarkan
-                jarak koordinat.
-              </p>
-
-              <button
-                className="detail-link"
-                onClick={() => openDetail(item, true)}
-              >
-                Explore destination ↗
-              </button>
-            </div>
-          </div>
-        </div>
-      </article>
-    ))}
-  </div>
-</section>
-
+                          <button
+                            className="detail-link"
+                            onClick={() => openDetail(item, true)}
+                          >
+                            Explore destination ↗
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
 
             {/* WEATHER */}
             <section className="weather-section">
@@ -1649,9 +1709,7 @@ const nearbyDestinations = useMemo(() => {
                 <div>
                   <span className="eyebrow">LOCAL WEATHER</span>
                   <h2>Weather Information</h2>
-                  <p>
-                    Kondisi cuaca terkini di {selected.name}.
-                  </p>
+                  <p>Kondisi cuaca terkini di {selected.name}.</p>
                 </div>
 
                 <span className="weather-location">
@@ -1671,7 +1729,9 @@ const nearbyDestinations = useMemo(() => {
                   <p>{weatherError}</p>
                   <button
                     className="weather-retry"
-                    onClick={() => setWeatherRetry((prev) => prev + 1)}
+                    onClick={() =>
+                      setWeatherRetry((prev) => prev + 1)
+                    }
                   >
                     Try again
                   </button>
@@ -1732,9 +1792,7 @@ const nearbyDestinations = useMemo(() => {
                 <div>
                   <span className="eyebrow">COMMUNITY EXPERIENCE</span>
                   <h2>Reviews & Ratings</h2>
-                  <p>
-                    Lihat penilaian dan pengalaman pengguna lainnya.
-                  </p>
+                  <p>Lihat penilaian dan pengalaman pengguna lainnya.</p>
                 </div>
               </div>
 
@@ -1879,9 +1937,7 @@ const nearbyDestinations = useMemo(() => {
           <section className="inner-page">
             <span className="eyebrow">YOUR COLLECTION</span>
             <h1 className="page-title">My Favorites</h1>
-            <p className="page-subtitle">
-              Destinasi yang kamu simpan.
-            </p>
+            <p className="page-subtitle">Destinasi yang kamu simpan.</p>
 
             <div className="destination-grid">
               {favoriteDestinations.length > 0 ? (
@@ -1892,9 +1948,7 @@ const nearbyDestinations = useMemo(() => {
                 <div className="empty-state">
                   <div className="empty-heart">♡</div>
                   <h3>Your list is waiting</h3>
-                  <p>
-                    Tekan ikon hati pada destinasi untuk menyimpannya.
-                  </p>
+                  <p>Tekan ikon hati pada destinasi untuk menyimpannya.</p>
                   <button
                     className="primary-button"
                     onClick={() => navigate("home")}
@@ -1924,9 +1978,7 @@ const nearbyDestinations = useMemo(() => {
               ) : (
                 <div className="empty-state">
                   <h3>No recent destinations</h3>
-                  <p>
-                    Destinasi yang kamu buka akan muncul di sini.
-                  </p>
+                  <p>Destinasi yang kamu buka akan muncul di sini.</p>
                   <button
                     className="primary-button"
                     onClick={() => navigate("home")}
@@ -1983,8 +2035,8 @@ const nearbyDestinations = useMemo(() => {
             <span className="eyebrow">DISCOVER BY LOCATION</span>
             <h1 className="page-title">Explore the map</h1>
             <p className="page-subtitle">
-              Temukan berbagai destinasi menarik di Indonesia.
-              Klik marker untuk melihat detail tempat.
+              Temukan berbagai destinasi menarik di Indonesia. Klik marker
+              untuk melihat detail tempat.
             </p>
 
             <MapContainer
@@ -2034,7 +2086,7 @@ const nearbyDestinations = useMemo(() => {
               Beberapa tempat untuk mulai merencanakan petualanganmu.
             </p>
 
-            <div className="destination-grid">
+            <div className="destination-grid compact-destination-grid">
               {destinations
                 .filter(
                   (item) =>

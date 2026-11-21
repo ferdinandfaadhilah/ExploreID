@@ -123,7 +123,7 @@ main {
 }
 
 .nav-links button:hover,
-.nav-links button.nav-active { color: #A9C2D0; }
+.nav-links button.nav-active { color: #456477; }
 
 .nav-actions {
   display: flex;
@@ -205,7 +205,10 @@ main {
   transition: 0.2s ease;
 }
 
-.nav-search:hover { color: #A9C2D0; transform: scale(1.08); }
+.nav-search:hover {
+  color: #456477;
+  transform: scale(1.08);
+}
 
 .nav-search-input {
   width: 190px;
@@ -570,6 +573,11 @@ main {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 26px 22px;
+}
+
+.map-list,
+.inner-page .destination-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .destination-card {
@@ -2955,4 +2963,286 @@ main:has(.hero) { padding-top: 0; }
   .app .hero-interactive-title .hero-title-letter {
     transition: none !important;
   }
+}
+
+/* =========================================
+   EXPLORE DESTINATION - COMPACT SIZE
+========================================= */
+
+.explore-catalog-section .destination-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 22px 18px;
+}
+
+.explore-catalog-section .destination-card {
+  width: 100%;
+}
+
+.explore-catalog-section .card-image {
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+}
+
+.explore-catalog-section .card-image-overlay {
+  padding: 14px;
+}
+
+.explore-catalog-section .card-content h3 {
+  font-size: 16px;
+}
+
+.explore-catalog-section .card-content .location {
+  font-size: 11px;
+}
+
+.explore-catalog-section .card-description {
+  font-size: 11px;
+  margin-top: 6px;
+}
+
+.explore-catalog-section .card-bottom {
+  margin-top: 10px;
+  padding-top: 9px;
+}
+
+.explore-catalog-section .card-bottom strong,
+.explore-catalog-section .detail-link {
+  font-size: 11px;
+}
+
+/* Laptop */
+@media (max-width: 1200px) {
+  .explore-catalog-section .destination-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .explore-catalog-section .destination-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+  .explore-catalog-section .destination-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 12px;
+  }
+
+  .explore-catalog-section .card-image {
+    aspect-ratio: 4 / 5;
+  }
+
+  .explore-catalog-section .card-image-overlay {
+    padding: 10px;
+  }
+
+  .explore-catalog-section .card-content h3 {
+    font-size: 14px;
+  }
+
+  .explore-catalog-section .card-bottom strong,
+  .explore-catalog-section .detail-link {
+    font-size: 10px;
+  }
+}
+
+/* ==========================================
+   EXPLORE - CATEGORY HORIZONTAL CAROUSEL
+========================================== */
+
+.explore-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  margin-top: 36px;
+}
+
+.explore-category-section {
+  width: 100%;
+  min-width: 0;
+}
+
+.explore-category-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.explore-category-heading h2 {
+  margin: 8px 0;
+  font-size: clamp(22px, 3vw, 32px);
+  letter-spacing: -0.04em;
+}
+
+.explore-category-heading p {
+  margin: 0;
+  color: #788397;
+  font-size: 13px;
+}
+
+/* SCROLL CONTAINER */
+.explore-horizontal-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 16px 4px 22px;
+  margin: -8px 0 0;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #b7c3bd transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.explore-horizontal-wrap::-webkit-scrollbar {
+  height: 5px;
+}
+
+.explore-horizontal-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.explore-horizontal-wrap::-webkit-scrollbar-thumb {
+  background: #b7c3bd;
+  border-radius: 20px;
+}
+
+/* CARD ROW */
+.explore-horizontal-track {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 18px;
+  width: max-content;
+  min-width: 100%;
+}
+
+/* CARD SIZE */
+.explore-catalog-section .explore-horizontal-track .destination-card {
+  flex: 0 0 230px;
+  width: 230px;
+  min-width: 230px;
+  margin: 0;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* CARD LIFT */
+.explore-catalog-section .explore-horizontal-track .destination-card:hover {
+  transform: translateY(-7px);
+  z-index: 2;
+}
+
+/* IMAGE */
+.explore-catalog-section .explore-horizontal-track .card-image {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+/* IMAGE ZOOM */
+.explore-catalog-section .explore-horizontal-track .card-image img {
+  transition: transform 0.45s ease;
+}
+
+.explore-catalog-section .explore-horizontal-track .destination-card:hover .card-image img {
+  transform: scale(1.045);
+}
+
+/* CARD SHADOW */
+.explore-catalog-section .explore-horizontal-track .destination-card:hover .card-image {
+  box-shadow: 0 16px 30px rgba(20, 30, 25, 0.2);
+}
+
+/* REDUCE MOVEMENT IF USER PREFERS */
+@media (prefers-reduced-motion: reduce) {
+  .explore-horizontal-track .destination-card,
+  .explore-horizontal-track .card-image img {
+    transition: none;
+  }
+
+  .explore-horizontal-track .destination-card:hover {
+    transform: none;
+  }
+}
+
+/* TABLET */
+@media (max-width: 900px) {
+  .explore-catalog-section .explore-horizontal-track .destination-card {
+    flex-basis: 210px;
+    width: 210px;
+    min-width: 210px;
+  }
+
+  .explore-category-list {
+    gap: 36px;
+  }
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .explore-category-heading h2 {
+    font-size: 23px;
+  }
+
+  .explore-category-heading p {
+    font-size: 12px;
+  }
+
+  .explore-horizontal-track {
+    gap: 13px;
+  }
+
+  .explore-catalog-section .explore-horizontal-track .destination-card {
+    flex-basis: 175px;
+    width: 175px;
+    min-width: 175px;
+  }
+
+  .explore-category-list {
+    gap: 30px;
+  }
+}
+
+.nav-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-search-input {
+  width: 0;
+  padding: 10px 0;
+  opacity: 0;
+  border: 0;
+  pointer-events: none;
+  overflow: hidden;
+  transition:
+    width 0.3s ease,
+    opacity 0.3s ease,
+    padding 0.3s ease;
+}
+
+.nav-search-wrap.search-open .nav-search-input {
+  width: 190px;
+  padding: 10px 14px;
+  opacity: 1;
+  border: 1px solid var(--border);
+  pointer-events: auto;
+}
+
+/* MAP - 4 CARD BESAR */
+.inner-page .destination-grid.map-list {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.inner-page .destination-grid.map-list .destination-card {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
 }
