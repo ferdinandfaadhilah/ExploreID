@@ -166,6 +166,26 @@ main {
   border-radius: 50%;
 }
 
+.settings-nav {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #26364A;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.settings-nav:hover {
+  background: #F1F5F8;
+  transform: rotate(45deg);
+}
+
 .auth-nav-button {
   padding: 10px 17px;
   border: 1px solid var(--border);
@@ -3245,4 +3265,349 @@ main:has(.hero) { padding-top: 0; }
   width: 100%;
   min-width: 0;
   max-width: none;
+}
+
+/* =========================
+   SETTINGS PAGE
+========================= */
+
+.settings-page {
+  min-height: 70vh;
+  padding-bottom: 60px;
+}
+
+.settings-page .page-title {
+  margin-bottom: 12px;
+}
+
+.settings-page .page-subtitle {
+  margin-bottom: 32px;
+}
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 32px;
+  margin-top: 40px;
+  align-items: start;
+}
+
+.settings-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: #f1f5f8;
+  border: 1px solid #d8e5ec;
+  border-radius: 16px;
+}
+
+.settings-category {
+  width: 100%;
+  padding: 13px 16px;
+  text-align: left;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #71808c;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.settings-category:hover {
+  background: #e5edf2;
+  color: #26364a;
+}
+
+.settings-category.active {
+  background: #ffffff;
+  color: #26364a;
+  box-shadow: 0 2px 8px rgba(38, 54, 74, 0.06);
+}
+
+.settings-content {
+  min-height: 350px;
+  padding: 30px;
+  background: #ffffff;
+  border: 1px solid #d8e5ec;
+  border-radius: 16px;
+}
+
+.settings-content h2 {
+  margin: 0 0 12px;
+  color: #26364a;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.settings-content p {
+  margin: 0;
+  color: #71808c;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.settings-account {
+  width: 100%;
+}
+
+.settings-description {
+  margin-top: 8px !important;
+  margin-bottom: 28px !important;
+}
+
+.settings-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px;
+  margin-bottom: 26px;
+  background: #f1f5f8;
+  border: 1px solid #d8e5ec;
+  border-radius: 14px;
+}
+
+.settings-profile-avatar {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #365365;
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.settings-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.settings-profile-info h3 {
+  margin: 0 0 6px;
+  color: #26364a;
+  font-size: 17px;
+}
+
+.settings-profile-info p {
+  margin: 0;
+  color: #71808c;
+  font-size: 13px;
+}
+
+.settings-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 17px 0;
+  border-bottom: 1px solid #d8e5ec;
+}
+
+.settings-info-row span {
+  color: #71808c;
+  font-size: 14px;
+}
+
+.settings-info-row strong {
+  color: #26364a;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.settings-edit-button {
+  margin-top: 26px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #365365;
+  color: white;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.settings-edit-button:hover {
+  background: #26364a;
+  transform: translateY(-1px);
+}
+
+/* =========================
+   SETTINGS FAVORITES
+========================= */
+
+.settings-favorites {
+  width: 100%;
+}
+
+.settings-empty-favorites {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  margin-top: 20px;
+  padding: 30px;
+  text-align: center;
+  background: #f1f5f8;
+  border: 1px dashed #d8e5ec;
+  border-radius: 16px;
+}
+
+.settings-empty-favorites > span {
+  font-size: 38px;
+  color: #365365;
+  margin-bottom: 12px;
+}
+
+.settings-empty-favorites h3 {
+  margin: 0 0 8px;
+  color: #26364a;
+  font-size: 18px;
+}
+
+.settings-empty-favorites p {
+  margin: 0;
+  color: #71808c;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* =========================
+   SETTINGS NOTIFICATIONS
+========================= */
+
+.settings-notifications {
+  width: 100%;
+}
+
+.settings-option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 0;
+  border-bottom: 1px solid #d8e5ec;
+}
+
+.settings-option-info h3 {
+  margin: 0 0 6px;
+  color: #26364a;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.settings-option-info p {
+  margin: 0;
+  color: #71808c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Toggle */
+
+.settings-switch {
+  position: relative;
+  display: inline-flex;
+  width: 46px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.settings-switch input {
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
+.settings-switch-slider {
+  position: absolute;
+  inset: 0;
+  background: #d8e5ec;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.settings-switch-slider::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 3px;
+  top: 3px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: 0.25s ease;
+  box-shadow: 0 1px 4px rgba(38, 54, 74, 0.15);
+}
+
+.settings-switch input:checked + .settings-switch-slider {
+  background: #365365;
+}
+
+.settings-switch input:checked + .settings-switch-slider::before {
+  transform: translateX(20px);
+}
+
+.settings-switch input:focus-visible + .settings-switch-slider {
+  outline: 2px solid #71808c;
+  outline-offset: 3px;
+}
+
+/* =========================
+   SETTINGS LANGUAGE & REGION
+========================= */
+
+.settings-language {
+  width: 100%;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.settings-field label {
+  color: #26364a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.settings-field select {
+  width: 100%;
+  max-width: 420px;
+  padding: 13px 15px;
+  border: 1px solid #d8e5ec;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #26364a;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.settings-field select:hover {
+  border-color: #9aafbd;
+}
+
+.settings-field select:focus {
+  border-color: #365365;
+  box-shadow: 0 0 0 3px rgba(54, 83, 101, 0.08);
 }

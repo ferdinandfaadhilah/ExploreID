@@ -37,7 +37,8 @@ type Page =
   | "recently-viewed"
   | "search"
   | "login"
-  | "register";
+  | "register"
+  | "settings";
 
 type WeatherData = {
   temperature: number;
@@ -173,6 +174,28 @@ function slowScrollTo(targetY: number, duration = 1400) {
   requestAnimationFrame(animate);
 }
 
+const regionLocales: Record<string, string> = {
+  Indonesia: "id-ID",
+  Malaysia: "ms-MY",
+  Singapore: "en-SG",
+  "United States": "en-US",
+  "United Kingdom": "en-GB",
+  Japan: "ja-JP",
+};
+
+function getRegionLocale(region: string) {
+  return regionLocales[region] || "id-ID";
+}
+
+function getSavedBoolean(key: string, defaultValue: boolean) {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved === null ? defaultValue : saved === "true";
+  } catch {
+    return defaultValue;
+  }
+}
+
 function App() {
   const [homeWelcome] = useState(
     () =>
@@ -185,7 +208,6 @@ function App() {
   const [activeHomeSection, setActiveHomeSection] = useState<
     "home" | "explore"
   >("home");
-
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -196,6 +218,53 @@ function App() {
   const [detailPhase, setDetailPhase] = useState<
     "exit" | "enter" | null
   >(null);
+const [settingsCategory, setSettingsCategory] = useState(
+  "Account & Profile"
+);
+
+const [emailNotifications, setEmailNotifications] = useState(() =>
+  getSavedBoolean("exploreid-email-notifications", true)
+);
+
+const [recommendationNotifications, setRecommendationNotifications] =
+  useState(() =>
+    getSavedBoolean("exploreid-recommendation-notifications", true)
+  );
+
+const [updateNotifications, setUpdateNotifications] = useState(() =>
+  getSavedBoolean("exploreid-update-notifications", false)
+);
+
+const [settingsLanguage, setSettingsLanguage] = useState(() => {
+  try {
+    return localStorage.getItem("exploreid-language") || "English";
+  } catch {
+    return "English";
+  }
+});
+
+const isIndonesian = settingsLanguage === "Indonesia";
+
+const [settingsRegion, setSettingsRegion] = useState(() => {
+  try {
+    return localStorage.getItem("exploreid-region") || "Indonesia";
+  } catch {
+    return "Indonesia";
+  }
+});
+
+// PRIVACY
+const [privateProfile, setPrivateProfile] = useState(() =>
+  getSavedBoolean("exploreid-private-profile", true)
+);
+
+const [activitySharing, setActivitySharing] = useState(() =>
+  getSavedBoolean("exploreid-activity-sharing", false)
+);
+
+const [personalizedContent, setPersonalizedContent] = useState(() =>
+  getSavedBoolean("exploreid-personalized-content", true)
+);
 
   useEffect(() => {
     const updateActiveSection = () => {
@@ -269,6 +338,158 @@ function App() {
       active = false;
     };
   }, [user]);
+
+// SAVE LANGUAGE
+useEffect(() => {
+  localStorage.setItem("exploreid-language", settingsLanguage);
+}, [settingsLanguage]);
+
+// SAVE REGION
+useEffect(() => {
+  localStorage.setItem("exploreid-region", settingsRegion);
+}, [settingsRegion]);
+
+// SAVE NOTIFICATIONS
+useEffect(() => {
+  localStorage.setItem(
+    "exploreid-email-notifications",
+    String(emailNotifications)
+  );
+}, [emailNotifications]);
+
+useEffect(() => {
+  localStorage.setItem(
+    "exploreid-recommendation-notifications",
+    String(recommendationNotifications)
+  );
+}, [recommendationNotifications]);
+
+useEffect(() => {
+  localStorage.setItem(
+    "exploreid-update-notifications",
+    String(updateNotifications)
+  );
+}, [updateNotifications]);
+
+// SAVE PRIVACY
+useEffect(() => {
+  localStorage.setItem(
+    "exploreid-private-profile",
+    String(privateProfile)
+  );
+}, [privateProfile]);
+
+useEffect(() => {
+  localStorage.setItem(
+    "exploreid-activity-sharing",
+    String(activitySharing)
+  );
+}, [activitySharing]);
+
+useEffect(() => {
+  localStorage.setItem(
+    "exploreid-personalized-content",
+    String(personalizedContent)
+  );
+}, [personalizedContent]);
+
+const st = isIndonesian
+  ? {
+      preferences: "PREFERENSI",
+      title: "Pengaturan",
+      subtitle: "Kelola akun dan sesuaikan pengalaman ExploreID kamu.",
+      account: "Akun & Profil",
+      favorites: "Favorit",
+      notifications: "Notifikasi",
+      language: "Bahasa & Wilayah",
+      privacy: "Privasi",
+      appearance: "Tampilan",
+      about: "Tentang ExploreID",
+      profileInfo: "Informasi Profil",
+      profileDesc: "Informasi pribadi yang terhubung dengan akun ExploreID kamu.",
+      accountEmail: "Email akun",
+      profileName: "Nama profil",
+      manageProfile: "Kelola Profil",
+      notificationTitle: "Preferensi Notifikasi",
+      notificationDesc: "Pilih notifikasi yang ingin kamu terima.",
+      email: "Notifikasi Email",
+      emailDesc: "Terima informasi penting melalui email.",
+      recommendations: "Rekomendasi Destinasi",
+      recommendationsDesc: "Dapatkan rekomendasi tempat yang mungkin menarik untuk kamu.",
+      updates: "Pembaruan ExploreID",
+      updatesDesc: "Informasi fitur baru dan peningkatan ExploreID.",
+      languageTitle: "Bahasa & Wilayah",
+      languageDesc: "Atur bahasa dan preferensi wilayah.",
+      displayLanguage: "Bahasa Tampilan",
+      region: "Wilayah",
+      preview: "Pratinjau Format Wilayah",
+      dateFormat: "Format tanggal",
+      numberFormat: "Format angka",
+      privacyTitle: "Preferensi Privasi",
+      privacyDesc: "Atur preferensi privasi untuk pengalaman kamu.",
+      privateProfile: "Profil Privat",
+      privateProfileDesc: "Preferensi agar profil kamu tidak ditampilkan secara publik.",
+      activitySharing: "Berbagi Aktivitas",
+      activitySharingDesc: "Preferensi untuk membagikan aktivitas perjalanan kamu.",
+      personalized: "Konten Personal",
+      personalizedDesc: "Izinkan ExploreID menyesuaikan konten berdasarkan preferensi kamu.",
+      privacyNote: "Pengaturan privasi ini saat ini tersimpan di perangkat. Pengaturan ini belum mengubah kontrol akses di server Supabase.",
+      emptyFavorites: "Belum ada destinasi favorit",
+      emptyFavoritesDesc: "Simpan destinasi yang kamu suka dan destinasi tersebut akan muncul di sini.",
+      aboutTitle: "Tentang ExploreID",
+      aboutDesc: "Temukan berbagai destinasi, budaya, dan pengalaman menarik dari seluruh Indonesia.",
+      version: "Versi",
+      madeFor: "Dibuat untuk menjelajahi Indonesia.",
+      comingSoon: "Pengaturan ini akan tersedia pada pembaruan berikutnya.",
+    }
+  : {
+      preferences: "PREFERENCES",
+      title: "Settings",
+      subtitle: "Manage your account and customize your ExploreID experience.",
+      account: "Account & Profile",
+      favorites: "Favorites",
+      notifications: "Notifications",
+      language: "Language & Region",
+      privacy: "Privacy",
+      appearance: "Appearance",
+      about: "About ExploreID",
+      profileInfo: "Profile Information",
+      profileDesc: "Your personal information associated with your ExploreID account.",
+      accountEmail: "Account email",
+      profileName: "Profile name",
+      manageProfile: "Manage Profile",
+      notificationTitle: "Notification Preferences",
+      notificationDesc: "Choose which notifications you'd like to receive.",
+      email: "Email Notifications",
+      emailDesc: "Receive important information through email.",
+      recommendations: "Destination Recommendations",
+      recommendationsDesc: "Get notified about destinations that may interest you.",
+      updates: "ExploreID Updates",
+      updatesDesc: "Receive updates about new features and improvements.",
+      languageTitle: "Language & Region",
+      languageDesc: "Set your preferred language and regional preferences.",
+      displayLanguage: "Display Language",
+      region: "Region",
+      preview: "Regional Format Preview",
+      dateFormat: "Date format",
+      numberFormat: "Number format",
+      privacyTitle: "Privacy Preferences",
+      privacyDesc: "Manage your privacy preferences for your experience.",
+      privateProfile: "Private Profile",
+      privateProfileDesc: "Preference to keep your profile from public display.",
+      activitySharing: "Activity Sharing",
+      activitySharingDesc: "Preference for sharing your travel activity.",
+      personalized: "Personalized Content",
+      personalizedDesc: "Allow ExploreID to adjust content based on your preferences.",
+      privacyNote: "These privacy settings are currently stored on this device. They do not yet change access controls on the Supabase server.",
+      emptyFavorites: "No favorites yet",
+      emptyFavoritesDesc: "Save destinations you love, and they'll appear here.",
+      aboutTitle: "About ExploreID",
+      aboutDesc: "Discover destinations, culture, and exciting experiences across Indonesia.",
+      version: "Version",
+      madeFor: "Made for exploring Indonesia.",
+      comingSoon: "This setting will be available in a future update.",
+    };
 
   const accountName =
     user?.user_metadata?.full_name ||
@@ -914,11 +1135,13 @@ onMouseLeave={() => {
 
         <div className="nav-actions">
           <button
-            className="favorite-nav"
-            onClick={() => navigate("favorites")}
-          >
-            ♡ <span>{favorites.length}</span>
+            className="settings-nav"
+            onClick={() => navigate("settings")}
+            title="Settings"
+        >
+          ⚙
           </button>
+
 
           {user ? (
             <button
@@ -2029,6 +2252,413 @@ onMouseLeave={() => {
           <ProfilePage onLogout={handleLogout} />
         )}
 
+{page === "settings" && (
+  <section className="inner-page settings-page">
+    <span className="eyebrow">{st.preferences}</span>
+
+    <h1 className="page-title">{st.title}</h1>
+
+    <p className="page-subtitle">{st.subtitle}</p>
+
+    <div className="settings-layout">
+      {/* SIDEBAR */}
+      <aside className="settings-sidebar">
+        <button
+          className={`settings-category ${
+            settingsCategory === "Account & Profile" ? "active" : ""
+          }`}
+          onClick={() => setSettingsCategory("Account & Profile")}
+        >
+          {st.account}
+        </button>
+
+        <button
+          className={`settings-category ${
+            settingsCategory === "Favorites" ? "active" : ""
+          }`}
+          onClick={() => setSettingsCategory("Favorites")}
+        >
+          <span className="settings-category-icon">♡</span>
+          {st.favorites}
+          <span className="settings-category-count">
+            {favorites.length}
+          </span>
+        </button>
+
+        <button
+          className={`settings-category ${
+            settingsCategory === "Notifications" ? "active" : ""
+          }`}
+          onClick={() => setSettingsCategory("Notifications")}
+        >
+          {st.notifications}
+        </button>
+
+        <button
+          className={`settings-category ${
+            settingsCategory === "Language & Region" ? "active" : ""
+          }`}
+          onClick={() => setSettingsCategory("Language & Region")}
+        >
+          {st.language}
+        </button>
+
+        <button
+          className={`settings-category ${
+            settingsCategory === "Privacy" ? "active" : ""
+          }`}
+          onClick={() => setSettingsCategory("Privacy")}
+        >
+          {st.privacy}
+        </button>
+
+        <button
+          className={`settings-category ${
+            settingsCategory === "Appearance" ? "active" : ""
+          }`}
+          onClick={() => setSettingsCategory("Appearance")}
+        >
+          {st.appearance}
+        </button>
+
+        <button
+          className={`settings-category ${
+            settingsCategory === "About" ? "active" : ""
+          }`}
+          onClick={() => setSettingsCategory("About")}
+        >
+          {st.about}
+        </button>
+      </aside>
+
+      {/* CONTENT */}
+      <div className="settings-content">
+
+        {/* ACCOUNT */}
+        {settingsCategory === "Account & Profile" && (
+          <div className="settings-account">
+            <h2>{st.profileInfo}</h2>
+
+            <p className="settings-description">
+              {st.profileDesc}
+            </p>
+
+            <div className="settings-profile-card">
+              <div className="settings-profile-avatar">
+                {profileAvatar ? (
+                  <img src={profileAvatar} alt="Profile" />
+                ) : (
+                  accountInitials
+                )}
+              </div>
+
+              <div className="settings-profile-info">
+                <h3>
+                  {user?.user_metadata?.full_name || "ExploreID User"}
+                </h3>
+                <p>{user?.email || "No email available"}</p>
+              </div>
+            </div>
+
+            <div className="settings-info-row">
+              <span>{st.accountEmail}</span>
+              <strong>{user?.email || "-"}</strong>
+            </div>
+
+            <div className="settings-info-row">
+              <span>{st.profileName}</span>
+              <strong>
+                {user?.user_metadata?.full_name || "Not set"}
+              </strong>
+            </div>
+
+            <button
+              className="settings-edit-button"
+              onClick={() => navigate("profile")}
+            >
+              {st.manageProfile}
+            </button>
+          </div>
+        )}
+
+        {/* FAVORITES */}
+        {settingsCategory === "Favorites" && (
+          <div className="settings-favorites">
+            <h2>{st.favorites}</h2>
+
+            <p className="settings-description">
+              {st.emptyFavoritesDesc}
+            </p>
+
+            {favoriteDestinations.length === 0 ? (
+              <div className="settings-empty-favorites">
+                <span>♡</span>
+                <h3>{st.emptyFavorites}</h3>
+                <p>{st.emptyFavoritesDesc}</p>
+              </div>
+            ) : (
+              <div className="destination-grid">
+                {favoriteDestinations.map((destination) =>
+                  renderDestinationCard(destination)
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* NOTIFICATIONS */}
+        {settingsCategory === "Notifications" && (
+          <div className="settings-notifications">
+            <h2>{st.notificationTitle}</h2>
+
+            <p className="settings-description">
+              {st.notificationDesc}
+            </p>
+
+            <div className="settings-option-row">
+              <div className="settings-option-info">
+                <h3>{st.email}</h3>
+                <p>{st.emailDesc}</p>
+              </div>
+
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={emailNotifications}
+                  onChange={(e) =>
+                    setEmailNotifications(e.target.checked)
+                  }
+                />
+                <span className="settings-switch-slider"></span>
+              </label>
+            </div>
+
+            <div className="settings-option-row">
+              <div className="settings-option-info">
+                <h3>{st.recommendations}</h3>
+                <p>{st.recommendationsDesc}</p>
+              </div>
+
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={recommendationNotifications}
+                  onChange={(e) =>
+                    setRecommendationNotifications(e.target.checked)
+                  }
+                />
+                <span className="settings-switch-slider"></span>
+              </label>
+            </div>
+
+            <div className="settings-option-row">
+              <div className="settings-option-info">
+                <h3>{st.updates}</h3>
+                <p>{st.updatesDesc}</p>
+              </div>
+
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={updateNotifications}
+                  onChange={(e) =>
+                    setUpdateNotifications(e.target.checked)
+                  }
+                />
+                <span className="settings-switch-slider"></span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* LANGUAGE & REGION */}
+        {settingsCategory === "Language & Region" && (
+          <div className="settings-language">
+            <h2>{st.languageTitle}</h2>
+
+            <p className="settings-description">
+              {st.languageDesc}
+            </p>
+
+            <div className="settings-field">
+              <label htmlFor="settings-language">
+                {st.displayLanguage}
+              </label>
+
+              <select
+                id="settings-language"
+                value={settingsLanguage}
+                onChange={(e) =>
+                  setSettingsLanguage(e.target.value)
+                }
+              >
+                <option value="English">English</option>
+                <option value="Indonesia">Bahasa Indonesia</option>
+              </select>
+            </div>
+
+            <div className="settings-field">
+              <label htmlFor="settings-region">{st.region}</label>
+
+              <select
+                id="settings-region"
+                value={settingsRegion}
+                onChange={(e) =>
+                  setSettingsRegion(e.target.value)
+                }
+              >
+                <option value="Indonesia">Indonesia</option>
+                <option value="Malaysia">Malaysia</option>
+                <option value="Singapore">Singapore</option>
+                <option value="United States">United States</option>
+                <option value="United Kingdom">United Kingdom</option>
+                <option value="Japan">Japan</option>
+              </select>
+            </div>
+
+            <div className="settings-region-preview">
+              <h3>{st.preview}</h3>
+
+              <div className="settings-info-row">
+                <span>{st.dateFormat}</span>
+
+                <strong>
+                  {new Date(2026, 10, 22).toLocaleDateString(
+                    getRegionLocale(settingsRegion),
+                    {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    }
+                  )}
+                </strong>
+              </div>
+
+              <div className="settings-info-row">
+                <span>{st.numberFormat}</span>
+
+                <strong>
+                  {new Intl.NumberFormat(
+                    getRegionLocale(settingsRegion),
+                    {
+                      maximumFractionDigits: 2,
+                    }
+                  ).format(1234567.89)}
+                </strong>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PRIVACY */}
+        {settingsCategory === "Privacy" && (
+          <div className="settings-privacy">
+            <h2>{st.privacyTitle}</h2>
+
+            <p className="settings-description">
+              {st.privacyDesc}
+            </p>
+
+            <div className="settings-option-row">
+              <div className="settings-option-info">
+                <h3>{st.privateProfile}</h3>
+                <p>{st.privateProfileDesc}</p>
+              </div>
+
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={privateProfile}
+                  onChange={(e) =>
+                    setPrivateProfile(e.target.checked)
+                  }
+                />
+                <span className="settings-switch-slider"></span>
+              </label>
+            </div>
+
+            <div className="settings-option-row">
+              <div className="settings-option-info">
+                <h3>{st.activitySharing}</h3>
+                <p>{st.activitySharingDesc}</p>
+              </div>
+
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={activitySharing}
+                  onChange={(e) =>
+                    setActivitySharing(e.target.checked)
+                  }
+                />
+                <span className="settings-switch-slider"></span>
+              </label>
+            </div>
+
+            <div className="settings-option-row">
+              <div className="settings-option-info">
+                <h3>{st.personalized}</h3>
+                <p>{st.personalizedDesc}</p>
+              </div>
+
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={personalizedContent}
+                  onChange={(e) =>
+                    setPersonalizedContent(e.target.checked)
+                  }
+                />
+                <span className="settings-switch-slider"></span>
+              </label>
+            </div>
+
+            <p className="settings-description">
+              {st.privacyNote}
+            </p>
+          </div>
+        )}
+
+        {/* APPEARANCE */}
+        {settingsCategory === "Appearance" && (
+          <div className="settings-placeholder">
+            <h2>{st.appearance}</h2>
+            <p className="settings-description">
+              {st.comingSoon}
+            </p>
+          </div>
+        )}
+
+        {/* ABOUT */}
+        {settingsCategory === "About" && (
+          <div className="settings-about">
+            <h2>{st.aboutTitle}</h2>
+
+            <p className="settings-description">
+              {st.aboutDesc}
+            </p>
+
+            <div className="settings-info-row">
+              <span>{st.version}</span>
+              <strong>1.0.0</strong>
+            </div>
+
+            <div className="settings-info-row">
+              <span>ExploreID</span>
+              <strong>Indonesia</strong>
+            </div>
+
+            <p className="settings-description">
+              {st.madeFor}
+            </p>
+          </div>
+        )}
+
+      </div>
+    </div>
+  </section>
+)}
+
         {/* MAP */}
         {page === "map" && (
           <section className="inner-page">
@@ -2085,6 +2715,7 @@ onMouseLeave={() => {
             <p className="page-subtitle">
               Beberapa tempat untuk mulai merencanakan petualanganmu.
             </p>
+
 
             <div className="destination-grid compact-destination-grid">
               {destinations
