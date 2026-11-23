@@ -206,6 +206,27 @@ const [settingsLanguage, setSettingsLanguage] = useState(() => {
   }
 });
 
+type AppearanceTheme = "light" | "dark" | "system";
+
+const [appearanceTheme, setAppearanceTheme] =
+  useState<AppearanceTheme>(() => {
+    try {
+      const saved = localStorage.getItem("exploreid-appearance");
+
+      if (
+        saved === "light" ||
+        saved === "dark" ||
+        saved === "system"
+      ) {
+        return saved;
+      }
+
+      return "light";
+    } catch {
+      return "light";
+    }
+  });
+
 const isIndonesian = settingsLanguage === "Indonesia";
 
 
@@ -338,6 +359,40 @@ useEffect(() => {
 }, [activitySharing]);
 
 useEffect(() => {
+  const root = document.documentElement;
+  const systemTheme = window.matchMedia(
+    "(prefers-color-scheme: dark)"
+  );
+
+  const applyTheme = () => {
+    const selectedTheme =
+      appearanceTheme === "system"
+        ? systemTheme.matches
+          ? "dark"
+          : "light"
+        : appearanceTheme;
+
+    root.setAttribute("data-theme", selectedTheme);
+    root.style.colorScheme = selectedTheme;
+  };
+
+  localStorage.setItem(
+    "exploreid-appearance",
+    appearanceTheme
+  );
+
+  applyTheme();
+
+  if (appearanceTheme === "system") {
+    systemTheme.addEventListener("change", applyTheme);
+
+    return () => {
+      systemTheme.removeEventListener("change", applyTheme);
+    };
+  }
+}, [appearanceTheme]);
+
+useEffect(() => {
   localStorage.setItem(
     "exploreid-personalized-content",
     String(personalizedContent)
@@ -352,7 +407,7 @@ const st = isIndonesian
       account: "Akun & Profil",
       favorites: "Favorit",
       notifications: "Notifikasi",
-      language: "Bahasa & Wilayah",
+      language: "Bahasa",
       privacy: "Privasi",
       appearance: "Tampilan",
       about: "Tentang ExploreID",
@@ -369,8 +424,8 @@ const st = isIndonesian
       recommendationsDesc: "Dapatkan rekomendasi tempat yang mungkin menarik untuk kamu.",
       updates: "Pembaruan ExploreID",
       updatesDesc: "Informasi fitur baru dan peningkatan ExploreID.",
-      languageTitle: "Bahasa & Wilayah",
-      languageDesc: "Atur bahasa dan preferensi wilayah.",
+      languageTitle: "Bahasa",
+      languageDesc: "Atur bahasa yang ingin kamu gunakan di ExploreID.",
       displayLanguage: "Bahasa Tampilan",
       privacyTitle: "Preferensi Privasi",
       privacyDesc: "Atur preferensi privasi untuk pengalaman kamu.",
@@ -388,6 +443,14 @@ const st = isIndonesian
       version: "Versi",
       madeFor: "Dibuat untuk menjelajahi Indonesia.",
       comingSoon: "Pengaturan ini akan tersedia pada pembaruan berikutnya.",
+      appearanceTitle: "Pengaturan Tampilan",
+      appearanceDesc: "Sesuaikan tampilan ExploreID sesuai kenyamanan kamu.",
+      lightMode: "Mode Terang",
+      lightModeDesc: "Gunakan tampilan terang.",
+      darkMode: "Mode Gelap",
+      darkModeDesc: "Gunakan tampilan gelap.",
+      systemMode: "Ikuti Sistem",
+      systemModeDesc: "Sesuaikan dengan tema perangkat kamu.",
     }
   : {
       preferences: "PREFERENCES",
@@ -396,7 +459,7 @@ const st = isIndonesian
       account: "Account & Profile",
       favorites: "Favorites",
       notifications: "Notifications",
-      language: "Language & Region",
+      language: "Language",
       privacy: "Privacy",
       appearance: "Appearance",
       about: "About ExploreID",
@@ -413,8 +476,8 @@ const st = isIndonesian
       recommendationsDesc: "Get notified about destinations that may interest you.",
       updates: "ExploreID Updates",
       updatesDesc: "Receive updates about new features and improvements.",
-      languageTitle: "Language & Region",
-      languageDesc: "Set your preferred language and regional preferences.",
+      languageTitle: "Language Settings",
+      languageDesc: "Choose your preferred language for ExploreID.",
       displayLanguage: "Display Language",
       privacyTitle: "Privacy Preferences",
       privacyDesc: "Manage your privacy preferences for your experience.",
@@ -432,6 +495,14 @@ const st = isIndonesian
       version: "Version",
       madeFor: "Made for exploring Indonesia.",
       comingSoon: "This setting will be available in a future update.",
+      appearanceTitle: "Appearance Settings",
+      appearanceDesc: "Customize the ExploreID appearance.",
+      lightMode: "Light Mode",
+      lightModeDesc: "Use the light appearance.",
+      darkMode: "Dark Mode",
+      darkModeDesc: "Use the dark appearance.",
+      systemMode: "System Default",
+      systemModeDesc: "Follow your device theme.",
     };
 
   const accountName =
@@ -466,6 +537,108 @@ const st = isIndonesian
       return [];
     }
   });
+
+  // PERSONALIZED HERO RECOMMENDATIONS
+const recommendedHeroDestinations = useMemo(() => {
+  // Ambil data destinasi yang pernah dibuka pengguna
+  const viewedDestinations = recentlyViewed
+    .map((id) => destinations.find((item) => item.id === id))
+    .filter((item): item is Destination => item !== undefined);
+
+  // Hindari menampilkan destinasi yang baru saja dibuka
+  const viewedIds = new Set(
+    viewedDestinations.map((item) => item.id)
+  );
+
+  // Menghitung minat pengguna berdasarkan kategori dan wilayah
+  const categoryInterest = new Map<string, number>();
+  const regionInterest = new Map<string, number>();
+
+  viewedDestinations.forEach((item, index) => {
+    // Destinasi yang lebih baru dibuka mendapat bobot lebih besar
+    const weight = viewedDestinations.length - index;
+
+    categoryInterest.set(
+      item.category,
+      (categoryInterest.get(item.category) || 0) + weight
+    );
+
+    const region = item.location.split(",").pop()?.trim() || "";
+
+    regionInterest.set(
+      region,
+      (regionInterest.get(region) || 0) + weight
+    );
+  });
+
+  // Siapkan destinasi yang belum baru-baru ini dilihat
+  const pool = destinations
+    .filter((item) => !viewedIds.has(item.id))
+    .map((item) => {
+      const region = item.location.split(",").pop()?.trim() || "";
+
+      const categoryScore =
+        categoryInterest.get(item.category) || 0;
+
+      const regionScore =
+        regionInterest.get(region) || 0;
+
+      return {
+        item,
+        weight:
+          1 +
+          categoryScore * 1.5 +
+          regionScore * 0.75,
+      };
+    });
+
+  const recommendations: Destination[] = [];
+  const categoryCounts = new Map<string, number>();
+
+  // Maksimal 12 rekomendasi
+  const targetCount = Math.min(12, pool.length);
+
+  // Mengambil destinasi secara acak dengan bobot personalisasi
+  while (pool.length > 0 && recommendations.length < targetCount) {
+    const weightedPool = pool.map((candidate) => {
+      const alreadySelected =
+        categoryCounts.get(candidate.item.category) || 0;
+
+      return {
+        adjustedWeight:
+          candidate.weight / (1 + alreadySelected * 0.65),
+      };
+    });
+
+    const totalWeight = weightedPool.reduce(
+      (total, candidate) => total + candidate.adjustedWeight,
+      0
+    );
+
+    let randomValue = Math.random() * totalWeight;
+    let selectedIndex = 0;
+
+    for (let index = 0; index < weightedPool.length; index++) {
+      randomValue -= weightedPool[index].adjustedWeight;
+
+      if (randomValue <= 0) {
+        selectedIndex = index;
+        break;
+      }
+    }
+
+    const [picked] = pool.splice(selectedIndex, 1);
+
+    recommendations.push(picked.item);
+
+    categoryCounts.set(
+      picked.item.category,
+      (categoryCounts.get(picked.item.category) || 0) + 1
+    );
+  }
+
+  return recommendations;
+}, [recentlyViewed]);
 
   const [cloudReady, setCloudReady] = useState(false);
 
@@ -719,6 +892,23 @@ useEffect(() => {
     ? destinationGuides[selected.id] || defaultDestinationGuide
     : defaultDestinationGuide;
 
+    // SELECTED TICKET INFORMATION
+const selectedTicketInfo = selected
+  ? ticketInformation[selected.id]
+  : undefined;
+
+const hasTicketInfo = Boolean(
+  selectedTicketInfo &&
+    [
+      selectedTicketInfo.ticketPrice,
+      selectedTicketInfo.ticketNote,
+      selectedTicketInfo.ticketUrl,
+    ].some(
+      (value) =>
+        typeof value === "string" && value.trim() !== ""
+    )
+);
+
   const nearbyDestinations = useMemo(() => {
     if (!selected) return [];
 
@@ -924,45 +1114,60 @@ useEffect(() => {
     setReviewSuccess("Review berhasil dihapus.");
   }
 
-  // DESTINATION CARD
-  function renderDestinationCard(item: Destination) {
-    const saved = favorites.includes(item.id);
+// DESTINATION CARD
+function renderDestinationCard(item: Destination) {
+  const saved = favorites.includes(item.id);
 
-    return (
-      <article className="destination-card" key={item.id}>
-        <div className="card-image">
+  return (
+    <article className="destination-card" key={item.id}>
+      <div className="card-image">
+
+        {/* GAMBAR BISA DIKLIK */}
+        <button
+          type="button"
+          className="card-image-open"
+          onClick={() => openDetail(item)}
+          aria-label={`Lihat detail ${item.name}`}
+        >
           <img src={item.image} alt={item.name} />
+        </button>
 
-          <div className="card-image-overlay">
-            <div className="card-content">
-              <span className="tag">{item.category}</span>
-              <h3>{item.name}</h3>
-              <p className="location">⌖ {item.location}</p>
-              <p className="card-description">{item.description}</p>
+        <div className="card-image-overlay">
+          <div className="card-content">
+            <span className="tag">{item.category}</span>
 
-              <div className="card-bottom">
-                <strong>{item.price}</strong>
-                <button
-                  className="detail-link"
-                  onClick={() => openDetail(item)}
-                >
-                  Details ↗
-                </button>
-              </div>
+            <h3>{item.name}</h3>
+
+            <p className="location">
+              ⌖ {item.location}
+            </p>
+
+            <p className="card-description">
+              {item.description}
+            </p>
+
+            <div className="card-bottom">
+              <strong>{item.price}</strong>
             </div>
           </div>
-
-          <button
-            className={`heart-button ${saved ? "saved" : ""}`}
-            onClick={() => toggleFavorite(item.id)}
-            aria-label="Save favorite"
-          >
-            {saved ? "♥" : "♡"}
-          </button>
         </div>
-      </article>
-    );
-  }
+
+        {/* FAVORITE */}
+        <button
+          className={`heart-button ${saved ? "saved" : ""}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            toggleFavorite(item.id);
+          }}
+          aria-label="Save favorite"
+        >
+          {saved ? "♥" : "♡"}
+        </button>
+
+      </div>
+    </article>
+  );
+}
 
   if (authLoading) {
     return (
@@ -1199,24 +1404,33 @@ onMouseLeave={() => {
                 </button>
               </div>
 
-              <div
-                className="hero-destination-rail"
-                aria-label="Pilihan destinasi Indonesia"
-              >
-                {destinations.map((item) => (
-                  <button
-                    className="hero-destination-card"
-                    key={item.id}
-                    onClick={() => openDetail(item)}
-                    title={`Lihat ${item.name}`}
-                  >
-                    <img src={item.image} alt={item.name} loading="lazy" />
-                    <span className="hero-card-location">{item.location}</span>
-                    <strong>{item.name}</strong>
-                    <span className="hero-card-arrow">↗</span>
-                  </button>
-                ))}
-              </div>
+<div
+  className="hero-destination-rail"
+  aria-label="Rekomendasi destinasi Indonesia"
+>
+  {recommendedHeroDestinations.map((item) => (
+    <button
+      className="hero-destination-card"
+      key={item.id}
+      onClick={() => openDetail(item)}
+      title={`Lihat ${item.name}`}
+    >
+      <img
+        src={item.image}
+        alt={item.name}
+        loading="lazy"
+      />
+
+      <span className="hero-card-location">
+        {item.location}
+      </span>
+
+      <strong>{item.name}</strong>
+
+      <span className="hero-card-arrow">↗</span>
+    </button>
+  ))}
+</div>
 
               <div className="hero-scroll">
                 SCROLL TO EXPLORE <span>↓</span>
@@ -1584,145 +1798,55 @@ onMouseLeave={() => {
               </div>
             </section>
 
-            {/* TICKET INFORMATION - ticketInformation DATA */}
-            <section className="ticket-information-section">
-              <div className="section-top">
-                <div>
-                  <span className="eyebrow">TICKET INFORMATION</span>
-                  <h2>Plan your visit</h2>
-                  <p>
-                    Informasi tiket untuk {selected.name}. Periksa informasi
-                    terbaru sebelum berkunjung.
-                  </p>
-                </div>
-              </div>
+{/* TICKET INFORMATION */}
+{hasTicketInfo && selectedTicketInfo && (
+  <section className="ticket-information-section">
+    <div className="section-top">
+      <div>
+        <span className="eyebrow">TICKET INFORMATION</span>
+        <h2>Plan your visit</h2>
+        <p>
+          Informasi tiket untuk {selected.name}.
+          Periksa informasi terbaru sebelum berkunjung.
+        </p>
+      </div>
+    </div>
 
-              <div className="ticket-information-card">
-                <div className="ticket-information-icon">🎟️</div>
+    <div className="ticket-information-card">
+      <div className="ticket-information-icon">
+        🎟️
+      </div>
 
-                <div className="ticket-information-content">
-                  <span>OFFICIAL TICKET INFORMATION</span>
+      <div className="ticket-information-content">
+        <span>OFFICIAL TICKET INFORMATION</span>
 
-                  <h3>
-                    {ticketInformation[selected.id]?.ticketPrice ||
-                      "Informasi tiket belum tersedia"}
-                  </h3>
+        {selectedTicketInfo.ticketPrice?.trim() && (
+          <h3>{selectedTicketInfo.ticketPrice}</h3>
+        )}
 
-                  <p>
-                    {ticketInformation[selected.id]?.ticketNote ||
-                      "Kanal pembelian tiket resmi untuk destinasi ini belum tersedia di ExploreID."}
-                  </p>
+        {selectedTicketInfo.ticketNote?.trim() && (
+          <p>{selectedTicketInfo.ticketNote}</p>
+        )}
 
-                  {ticketInformation[selected.id]?.ticketUrl && (
-                    <a
-                      href={ticketInformation[selected.id].ticketUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="primary-button"
-                    >
-                      Check Official Tickets ↗
-                    </a>
-                  )}
+        {selectedTicketInfo.ticketUrl?.trim() && (
+          <a
+            href={selectedTicketInfo.ticketUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="primary-button"
+          >
+            Check Official Tickets ↗
+          </a>
+        )}
 
-                  <p className="ticket-unavailable">
-                    Harga dan ketersediaan tiket mengikuti informasi dari
-                    pengelola.
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* TICKET INFORMATION - SELECTED DESTINATION DATA */}
-            <section className="ticket-information-section">
-              <div className="section-top">
-                <div>
-                  <span className="eyebrow">TICKET INFORMATION</span>
-                  <h2>Plan your visit</h2>
-                  <p>
-                    Informasi tiket untuk {selected.name}. Periksa informasi
-                    terbaru sebelum berkunjung.
-                  </p>
-                </div>
-              </div>
-
-              <div className="ticket-information-card">
-                <div className="ticket-information-icon">🎟️</div>
-
-                <div className="ticket-information-content">
-                  <span>OFFICIAL TICKET PRICE</span>
-
-                  <h3>
-                    {selected.ticketPrice || "Informasi belum tersedia"}
-                  </h3>
-
-                  <p>
-                    {selected.ticketNote ||
-                      "Harga tiket belum tersedia dalam katalog ExploreID. Harga dapat berubah sesuai kebijakan pengelola."}
-                  </p>
-
-                  {selected.ticketUrl ? (
-                    <a
-                      href={selected.ticketUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="primary-button"
-                    >
-                      View Official Ticket Info ↗
-                    </a>
-                  ) : (
-                    <p className="ticket-unavailable">
-                      Tautan tiket resmi belum tersedia.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </section>
-
-            {/* TICKET INFORMATION - SECOND EXISTING SECTION */}
-            <section className="ticket-information-section">
-              <div className="section-top">
-                <div>
-                  <span className="eyebrow">TICKET INFORMATION</span>
-                  <h2>Plan your visit</h2>
-                  <p>
-                    Informasi tiket untuk {selected.name}. Periksa informasi
-                    terbaru sebelum berkunjung.
-                  </p>
-                </div>
-              </div>
-
-              <div className="ticket-information-card">
-                <div className="ticket-information-icon">🎟️</div>
-
-                <div className="ticket-information-content">
-                  <span>OFFICIAL TICKET PRICE</span>
-
-                  <h3>
-                    {selected.ticketPrice || "Informasi belum tersedia"}
-                  </h3>
-
-                  <p>
-                    {selected.ticketNote ||
-                      "Harga tiket belum tersedia dalam katalog ExploreID. Harga dapat berubah sesuai kebijakan pengelola."}
-                  </p>
-
-                  {selected.ticketUrl ? (
-                    <a
-                      href={selected.ticketUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="primary-button"
-                    >
-                      Check Official Tickets ↗
-                    </a>
-                  ) : (
-                    <p className="ticket-unavailable">
-                      Tautan tiket resmi belum tersedia.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </section>
+        <p className="ticket-unavailable">
+          Harga dan ketersediaan tiket mengikuti informasi
+          dari pengelola.
+        </p>
+      </div>
+    </div>
+  </section>
+)}
 
             {/* TRAVEL GUIDE */}
             <section className="visit-guide-section">
@@ -2276,52 +2400,85 @@ onMouseLeave={() => {
       {/* CONTENT */}
       <div className="settings-content">
 
-        {/* ACCOUNT */}
-        {settingsCategory === "Account & Profile" && (
-          <div className="settings-account">
-            <h2>{st.profileInfo}</h2>
+{/* ACCOUNT & PROFILE */}
+{settingsCategory === "Account & Profile" && (
+  <div className="settings-account">
 
-            <p className="settings-description">
-              {st.profileDesc}
-            </p>
+    {!user ? (
+      /* BELUM LOGIN */
+      <div className="settings-login-required">
+        <div className="settings-login-icon">
+          <span>🔒</span>
+        </div>
 
-            <div className="settings-profile-card">
-              <div className="settings-profile-avatar">
-                {profileAvatar ? (
-                  <img src={profileAvatar} alt="Profile" />
-                ) : (
-                  accountInitials
-                )}
-              </div>
+        <h2>
+          {isIndonesian
+            ? "Login untuk Mengakses Profil"
+            : "Login to Access Your Profile"}
+        </h2>
 
-              <div className="settings-profile-info">
-                <h3>
-                  {user?.user_metadata?.full_name || "ExploreID User"}
-                </h3>
-                <p>{user?.email || "No email available"}</p>
-              </div>
-            </div>
+        <p>
+          {isIndonesian
+            ? "Kamu perlu login terlebih dahulu untuk melihat dan mengelola informasi profil ExploreID."
+            : "You need to log in first to view and manage your ExploreID profile information."}
+        </p>
 
-            <div className="settings-info-row">
-              <span>{st.accountEmail}</span>
-              <strong>{user?.email || "-"}</strong>
-            </div>
+        <button
+          className="settings-login-button"
+          onClick={() => navigate("login")}
+        >
+          {isIndonesian ? "Masuk Sekarang" : "Login Now"}
+        </button>
+      </div>
+    ) : (
+      /* SUDAH LOGIN */
+      <>
+        <h2>{st.profileInfo}</h2>
 
-            <div className="settings-info-row">
-              <span>{st.profileName}</span>
-              <strong>
-                {user?.user_metadata?.full_name || "Not set"}
-              </strong>
-            </div>
+        <p className="settings-description">
+          {st.profileDesc}
+        </p>
 
-            <button
-              className="settings-edit-button"
-              onClick={() => navigate("profile")}
-            >
-              {st.manageProfile}
-            </button>
+        <div className="settings-profile-card">
+          <div className="settings-profile-avatar">
+            {profileAvatar ? (
+              <img src={profileAvatar} alt="Profile" />
+            ) : (
+              accountInitials
+            )}
           </div>
-        )}
+
+          <div className="settings-profile-info">
+            <h3>
+              {user.user_metadata?.full_name || "ExploreID User"}
+            </h3>
+            <p>{user.email || "No email available"}</p>
+          </div>
+        </div>
+
+        <div className="settings-info-row">
+          <span>{st.accountEmail}</span>
+          <strong>{user.email || "-"}</strong>
+        </div>
+
+        <div className="settings-info-row">
+          <span>{st.profileName}</span>
+          <strong>
+            {user.user_metadata?.full_name || "Not set"}
+          </strong>
+        </div>
+
+        <button
+          className="settings-edit-button"
+          onClick={() => navigate("profile")}
+        >
+          {st.manageProfile}
+        </button>
+      </>
+    )}
+
+  </div>
+)}
 
         {/* FAVORITES */}
         {settingsCategory === "Favorites" && (
@@ -2511,15 +2668,74 @@ onMouseLeave={() => {
           </div>
         )}
 
-        {/* APPEARANCE */}
-        {settingsCategory === "Appearance" && (
-          <div className="settings-placeholder">
-            <h2>{st.appearance}</h2>
-            <p className="settings-description">
-              {st.comingSoon}
-            </p>
-          </div>
+{/* APPEARANCE */}
+{settingsCategory === "Appearance" && (
+  <div className="settings-appearance">
+    <h2>{st.appearanceTitle}</h2>
+
+    <p className="settings-description">
+      {st.appearanceDesc}
+    </p>
+
+    <div className="appearance-options">
+
+      <button
+        type="button"
+        className={`appearance-choice ${
+          appearanceTheme === "light" ? "active" : ""
+        }`}
+        aria-pressed={appearanceTheme === "light"}
+        onClick={() => setAppearanceTheme("light")}
+      >
+        <span className="appearance-choice-icon">☀</span>
+        <span className="appearance-choice-text">
+          <strong>{st.lightMode}</strong>
+          <small>{st.lightModeDesc}</small>
+        </span>
+        {appearanceTheme === "light" && (
+          <span className="appearance-check">✓</span>
         )}
+      </button>
+
+      <button
+        type="button"
+        className={`appearance-choice ${
+          appearanceTheme === "dark" ? "active" : ""
+        }`}
+        aria-pressed={appearanceTheme === "dark"}
+        onClick={() => setAppearanceTheme("dark")}
+      >
+        <span className="appearance-choice-icon">☾</span>
+        <span className="appearance-choice-text">
+          <strong>{st.darkMode}</strong>
+          <small>{st.darkModeDesc}</small>
+        </span>
+        {appearanceTheme === "dark" && (
+          <span className="appearance-check">✓</span>
+        )}
+      </button>
+
+      <button
+        type="button"
+        className={`appearance-choice ${
+          appearanceTheme === "system" ? "active" : ""
+        }`}
+        aria-pressed={appearanceTheme === "system"}
+        onClick={() => setAppearanceTheme("system")}
+      >
+        <span className="appearance-choice-icon">▣</span>
+        <span className="appearance-choice-text">
+          <strong>{st.systemMode}</strong>
+          <small>{st.systemModeDesc}</small>
+        </span>
+        {appearanceTheme === "system" && (
+          <span className="appearance-check">✓</span>
+        )}
+      </button>
+
+    </div>
+  </div>
+)}
 
         {/* ABOUT */}
         {settingsCategory === "About" && (
