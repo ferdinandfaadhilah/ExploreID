@@ -2253,7 +2253,6 @@ onMouseLeave={() => {
           }`}
           onClick={() => setSettingsCategory("Favorites")}
         >
-          <span className="settings-category-icon">♡</span>
           {st.favorites}
           <span className="settings-category-count">
             {favorites.length}

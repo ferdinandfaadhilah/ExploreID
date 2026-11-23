@@ -3611,3 +3611,33 @@ main:has(.hero) { padding-top: 0; }
   border-color: #365365;
   box-shadow: 0 0 0 3px rgba(54, 83, 101, 0.08);
 }
+
+/* SETTINGS CATEGORY */
+.settings-category {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+/* FAVORITES COUNT */
+.settings-category-count {
+  margin-left: auto;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50px;
+  background: #e8edf0;
+  color: #263b3e;
+
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  flex-shrink: 0;
+}
