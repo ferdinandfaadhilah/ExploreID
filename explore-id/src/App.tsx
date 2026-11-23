@@ -149,18 +149,6 @@ const homeWelcomeMessages = [
   },
 ];
 
-const regionLocales: Record<string, string> = {
-  Indonesia: "id-ID",
-  Malaysia: "ms-MY",
-  Singapore: "en-SG",
-  "United States": "en-US",
-  "United Kingdom": "en-GB",
-  Japan: "ja-JP",
-};
-
-function getRegionLocale(region: string) {
-  return regionLocales[region] || "id-ID";
-}
 
 function getSavedBoolean(key: string, defaultValue: boolean) {
   try {
@@ -220,13 +208,6 @@ const [settingsLanguage, setSettingsLanguage] = useState(() => {
 
 const isIndonesian = settingsLanguage === "Indonesia";
 
-const [settingsRegion, setSettingsRegion] = useState(() => {
-  try {
-    return localStorage.getItem("exploreid-region") || "Indonesia";
-  } catch {
-    return "Indonesia";
-  }
-});
 
 // PRIVACY
 const [privateProfile, setPrivateProfile] = useState(() =>
@@ -319,11 +300,6 @@ useEffect(() => {
   localStorage.setItem("exploreid-language", settingsLanguage);
 }, [settingsLanguage]);
 
-// SAVE REGION
-useEffect(() => {
-  localStorage.setItem("exploreid-region", settingsRegion);
-}, [settingsRegion]);
-
 // SAVE NOTIFICATIONS
 useEffect(() => {
   localStorage.setItem(
@@ -396,10 +372,6 @@ const st = isIndonesian
       languageTitle: "Bahasa & Wilayah",
       languageDesc: "Atur bahasa dan preferensi wilayah.",
       displayLanguage: "Bahasa Tampilan",
-      region: "Wilayah",
-      preview: "Pratinjau Format Wilayah",
-      dateFormat: "Format tanggal",
-      numberFormat: "Format angka",
       privacyTitle: "Preferensi Privasi",
       privacyDesc: "Atur preferensi privasi untuk pengalaman kamu.",
       privateProfile: "Profil Privat",
@@ -444,10 +416,6 @@ const st = isIndonesian
       languageTitle: "Language & Region",
       languageDesc: "Set your preferred language and regional preferences.",
       displayLanguage: "Display Language",
-      region: "Region",
-      preview: "Regional Format Preview",
-      dateFormat: "Date format",
-      numberFormat: "Number format",
       privacyTitle: "Privacy Preferences",
       privacyDesc: "Manage your privacy preferences for your experience.",
       privateProfile: "Private Profile",
@@ -2445,84 +2413,34 @@ onMouseLeave={() => {
           </div>
         )}
 
-        {/* LANGUAGE & REGION */}
-        {settingsCategory === "Language & Region" && (
-          <div className="settings-language">
-            <h2>{st.languageTitle}</h2>
+{/* LANGUAGE */}
+{settingsCategory === "Language & Region" && (
+  <div className="settings-language">
+    <h2>{st.languageTitle}</h2>
 
-            <p className="settings-description">
-              {st.languageDesc}
-            </p>
+    <p className="settings-description">
+      {st.languageDesc}
+    </p>
 
-            <div className="settings-field">
-              <label htmlFor="settings-language">
-                {st.displayLanguage}
-              </label>
+    <div className="settings-field">
+      <label htmlFor="settings-language">
+        {st.displayLanguage}
+      </label>
 
-              <select
-                id="settings-language"
-                value={settingsLanguage}
-                onChange={(e) =>
-                  setSettingsLanguage(e.target.value)
-                }
-              >
-                <option value="English">English</option>
-                <option value="Indonesia">Bahasa Indonesia</option>
-              </select>
-            </div>
+      <select
+        id="settings-language"
+        value={settingsLanguage}
+        onChange={(e) =>
+          setSettingsLanguage(e.target.value)
+        }
+      >
+        <option value="English">English</option>
+        <option value="Indonesia">Bahasa Indonesia</option>
+      </select>
+    </div>
+  </div>
+)}
 
-            <div className="settings-field">
-              <label htmlFor="settings-region">{st.region}</label>
-
-              <select
-                id="settings-region"
-                value={settingsRegion}
-                onChange={(e) =>
-                  setSettingsRegion(e.target.value)
-                }
-              >
-                <option value="Indonesia">Indonesia</option>
-                <option value="Malaysia">Malaysia</option>
-                <option value="Singapore">Singapore</option>
-                <option value="United States">United States</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="Japan">Japan</option>
-              </select>
-            </div>
-
-            <div className="settings-region-preview">
-              <h3>{st.preview}</h3>
-
-              <div className="settings-info-row">
-                <span>{st.dateFormat}</span>
-
-                <strong>
-                  {new Date(2026, 10, 22).toLocaleDateString(
-                    getRegionLocale(settingsRegion),
-                    {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    }
-                  )}
-                </strong>
-              </div>
-
-              <div className="settings-info-row">
-                <span>{st.numberFormat}</span>
-
-                <strong>
-                  {new Intl.NumberFormat(
-                    getRegionLocale(settingsRegion),
-                    {
-                      maximumFractionDigits: 2,
-                    }
-                  ).format(1234567.89)}
-                </strong>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* PRIVACY */}
         {settingsCategory === "Privacy" && (

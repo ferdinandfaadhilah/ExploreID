@@ -3641,3 +3641,82 @@ main:has(.hero) { padding-top: 0; }
   line-height: 1;
   flex-shrink: 0;
 }
+
+/* =================================
+   SETTINGS PAGE SMOOTH ANIMATION
+================================= */
+
+@keyframes settingsPageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes settingsPanelEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animasi saat halaman Settings dibuka */
+.settings-page {
+  animation: settingsPageEnter 0.55s ease-out both;
+}
+
+/* Sidebar Settings */
+.settings-sidebar {
+  animation: settingsPanelEnter 0.55s ease-out 0.08s both;
+}
+
+/* Konten Settings */
+.settings-content {
+  animation: settingsPanelEnter 0.55s ease-out 0.14s both;
+}
+
+/* Animasi saat kategori Settings diganti */
+.settings-content > div {
+  animation: settingsPanelEnter 0.4s ease-out both;
+}
+
+/* Transisi tombol kategori */
+.settings-category {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.settings-category:hover {
+  transform: translateX(3px);
+}
+
+/* Hormati preferensi pengurangan animasi perangkat */
+@media (prefers-reduced-motion: reduce) {
+  .settings-page,
+  .settings-sidebar,
+  .settings-content,
+  .settings-content > div {
+    animation: none;
+  }
+
+  .settings-category {
+    transition: none;
+  }
+
+  .settings-category:hover {
+    transform: none;
+  }
+}
