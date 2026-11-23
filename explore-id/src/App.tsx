@@ -1,7 +1,7 @@
-
 import "./App.css";
 import { useEffect, useMemo, useState } from "react";
 import AuthPage from "./AuthPage";
+import TravelGuide from "./components/TravelGuide";
 import { useAuth } from "./context/AuthContext";
 import { supabase } from "./lib/supabaseClient";
 import { ticketInformation } from "./data/ticketInformation";
@@ -25,6 +25,8 @@ import {
   destinationGuides,
   defaultDestinationGuide,
 } from "./data/destinationGuides";
+import DestinationGallery from "./components/DestinationGallery";
+import { destinationGallery } from "./data/destinationGallery";
 
 type Page =
   | "home"
@@ -1849,105 +1851,21 @@ onMouseLeave={() => {
 )}
 
             {/* TRAVEL GUIDE */}
-            <section className="visit-guide-section">
-              <div className="visit-guide-content">
-                <div>
-                  <span className="eyebrow">TRAVEL GUIDE</span>
-                  <h2>Plan your visit</h2>
-                  <p>
-                    Panduan singkat untuk membantu kamu mengenal{" "}
-                    {selected.name} sebelum berkunjung.
-                  </p>
-                </div>
+<TravelGuide
+  destinationName={selected.name}
+  guide={selectedGuide}
+/>
 
-                <div className="visit-guide-list">
-                  <div className="visit-guide-item">
-                    <span>01</span>
-                    <div>
-                      <strong>Destination Highlights</strong>
-                      <p>
-                        Hal menarik yang menjadi daya tarik utama destinasi ini.
-                      </p>
-                      <ul>
-                        {selectedGuide.highlights.map((text, index) => (
-                          <li key={index}>{text}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="visit-guide-item">
-                    <span>02</span>
-                    <div>
-                      <strong>Things to Do</strong>
-                      <p>
-                        Aktivitas yang dapat kamu pertimbangkan saat berkunjung.
-                      </p>
-                      <ul>
-                        {selectedGuide.activities.map((text, index) => (
-                          <li key={index}>{text}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="visit-guide-item">
-                    <span>03</span>
-                    <div>
-                      <strong>How to Get There</strong>
-                      <p>{selectedGuide.access}</p>
-                    </div>
-                  </div>
-
-                  <div className="visit-guide-item">
-                    <span>04</span>
-                    <div>
-                      <strong>Available Facilities</strong>
-                      <p>{selectedGuide.facilities}</p>
-                    </div>
-                  </div>
-
-                  <div className="visit-guide-item">
-                    <span>05</span>
-                    <div>
-                      <strong>Travel Tips</strong>
-                      <p>
-                        Beberapa hal yang perlu diperhatikan sebelum dan
-                        selama perjalanan.
-                      </p>
-                      <ul>
-                        {selectedGuide.tips.map((text, index) => (
-                          <li key={index}>{text}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* PHOTO GALLERY */}
-            <section className="photo-gallery-section">
-              <div className="section-top">
-                <div>
-                  <span className="eyebrow">PHOTO PREVIEW</span>
-                  <h2>Destination Gallery</h2>
-                  <p>Foto utama destinasi dari katalog ExploreID.</p>
-                </div>
-              </div>
-
-              <div className="photo-gallery-grid">
-                <a
-                  href={selected.image}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="gallery-photo gallery-photo-main"
-                >
-                  <img src={selected.image} alt={selected.name} />
-                  <span>{selected.name}</span>
-                </a>
-              </div>
-            </section>
+<div className="gallery-spacing">
+  <DestinationGallery
+    destinationName={selected.name}
+    images={
+      destinationGallery[selected.id]?.length
+        ? destinationGallery[selected.id]
+        : [selected.image]
+    }
+  />
+</div>
 
             {/* NEARBY DESTINATIONS */}
             <section className="nearby-section">
