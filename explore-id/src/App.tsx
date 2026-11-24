@@ -1882,30 +1882,34 @@ onMouseLeave={() => {
 
               <div className="destination-grid">
                 {nearbyDestinations.map(({ item, distance }) => (
-                  <article className="destination-card" key={item.id}>
-                    <div className="card-image">
-                      <img src={item.image} alt={item.name} />
+                  <article className="destination-card nearby-card" key={item.id}>
+                    <button
+                      type="button"
+                      className="nearby-card-button"
+                      onClick={() => openDetail(item, true)}
+                      aria-label={`Explore ${item.name}`}
+                    >
+                      <div className="card-image">
+                        <img src={item.image} alt={item.name} />
 
-                      <div className="card-image-overlay">
-                        <div className="card-content">
-                          <span className="tag">{item.category}</span>
-                          <h3>{item.name}</h3>
-                          <p className="location">⌖ {item.location}</p>
+                        <div className="card-image-overlay">
+                          <div className="card-content">
+                            <span className="tag">{item.category}</span>
+                            <h3>{item.name}</h3>
+                            <p className="location">⌖ {item.location}</p>
 
-                          <p className="nearby-distance">
-                            Sekitar {distance.toFixed(1)} km berdasarkan
-                            jarak koordinat.
-                          </p>
+                            <p className="nearby-distance">
+                              Sekitar {distance.toFixed(1)} km berdasarkan
+                              jarak koordinat.
+                            </p>
 
-                          <button
-                            className="detail-link"
-                            onClick={() => openDetail(item, true)}
-                          >
-                            Explore destination ↗
-                          </button>
+                            <span className="detail-link">
+                              Explore destination ↗
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   </article>
                 ))}
               </div>

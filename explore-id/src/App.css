@@ -1411,7 +1411,9 @@ main:has(.hero) { padding-top: 0; }
   gap: 20px;
   width: 100%;
   max-width: 100%;
+  padding-top: 10px;
   padding-bottom: 12px;
+  margin-top: -10px;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
@@ -1435,13 +1437,32 @@ main:has(.hero) { padding-top: 0; }
 
 .nearby-section .destination-card {
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   border: none;
   border-radius: 14px;
   background: transparent;
   box-shadow: none;
   scroll-snap-align: start;
 }
+
+/* Nearby card: seluruh kartu menjadi area klik. */
+.nearby-section .nearby-card-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nearby-section .nearby-card-button:focus-visible {
+  outline: 3px solid #A9C2D0;
+  outline-offset: 3px;
+}
+
 
 .nearby-section .card-image {
   position: relative;
