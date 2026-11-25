@@ -3624,3 +3624,38 @@ html[data-theme="dark"] .footer {
 .gallery-spacing {
   padding-top: 75px;
 }
+
+/* =========================================
+   HOME INTRO — teks mengikuti tema
+   (sebelumnya warna #68758a ditulis inline sehingga
+   tetap redup di dark mode)
+========================================= */
+.home-intro-copy,
+.home-intro-copy p {
+  color: #68758a;
+}
+
+html[data-theme="dark"] .home-intro-copy,
+html[data-theme="dark"] .home-intro-copy p {
+  color: var(--dark-muted);
+}
+
+/* =========================================
+   MAP — tombol "tampilkan lebih banyak"
+========================================= */
+.map-load-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.map-load-more .primary-button {
+  margin-top: 0;
+}
+
+.map-load-more small {
+  color: var(--muted);
+  font-size: 12px;
+}
