@@ -13,7 +13,10 @@ import DestinationDetail from "./components/DestinationDetail";
 import MapPage from "./components/MapPage";
 import SettingsPage from "./components/SettingsPage";
 import IndonesiaPinMap from "./components/IndonesiaPinMap";
-import Reveal from "./components/Reveal";
+import Reveal, { prefersReducedMotion } from "./components/Reveal";
+import CommunitySection from "./components/CommunitySection";
+import FeaturedReviews from "./components/FeaturedReviews";
+import PageHeader from "./components/PageHeader";
 import ScribbleUnderline, {
   ScribbleBurst,
 } from "./components/ScribbleUnderline";
@@ -107,6 +110,40 @@ function AppContent() {
   }, [page]);
 
   const { user, loading: authLoading, signOut } = useAuth();
+
+  // Parallax hero: foto latar dan teks bergeser pelan saat halaman di-scroll.
+  useEffect(() => {
+    if (page !== "home" || authLoading || prefersReducedMotion()) {
+      return undefined;
+    }
+
+    const hero = document.querySelector<HTMLElement>(".hero-discover");
+
+    if (!hero) return undefined;
+
+    let frame = 0;
+
+    const update = () => {
+      frame = 0;
+      hero.style.setProperty(
+        "--hero-scroll",
+        String(Math.min(window.scrollY, 1400))
+      );
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+      hero.style.removeProperty("--hero-scroll");
+    };
+  }, [page, authLoading]);
 
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
 
@@ -844,6 +881,17 @@ function AppContent() {
                 </div>
               )}
             </section>
+
+            {/* KOMUNITAS */}
+            <CommunitySection
+              loggedIn={Boolean(user)}
+              avatarUrl={profileAvatar}
+              initials={accountInitials}
+              onJoin={() => navigate(user ? "explore" : "register")}
+            />
+
+            {/* ULASAN PILIHAN */}
+            <FeaturedReviews onOpen={openDetail} />
           </>
         )}
 
@@ -865,11 +913,13 @@ function AppContent() {
         {/* FAVORITES */}
         {page === "favorites" && (
           <section className="inner-page">
-            <span className="eyebrow">{t.favorites.eyebrow}</span>
-            <h1 className="page-title">{t.favorites.title}</h1>
-            <p className="page-subtitle">{t.favorites.subtitle}</p>
+            <PageHeader
+              eyebrow={t.favorites.eyebrow}
+              title={t.favorites.title}
+              subtitle={t.favorites.subtitle}
+            />
 
-            <div className="destination-grid">
+            <Reveal className="destination-grid" threshold={0.05}>
               {favoriteDestinations.length > 0 ? (
                 favoriteDestinations.map((item) => renderDestinationCard(item))
               ) : (
@@ -886,18 +936,20 @@ function AppContent() {
                   </button>
                 </div>
               )}
-            </div>
+            </Reveal>
           </section>
         )}
 
         {/* RECENTLY VIEWED */}
         {page === "recently-viewed" && (
           <section className="inner-page">
-            <span className="eyebrow">{t.recent.eyebrow}</span>
-            <h1 className="page-title">{t.recent.title}</h1>
-            <p className="page-subtitle">{t.recent.subtitle}</p>
+            <PageHeader
+              eyebrow={t.recent.eyebrow}
+              title={t.recent.title}
+              subtitle={t.recent.subtitle}
+            />
 
-            <div className="destination-grid">
+            <Reveal className="destination-grid" threshold={0.05}>
               {recentlyViewedDestinations.length > 0 ? (
                 recentlyViewedDestinations.map((item) =>
                   renderDestinationCard(item)
@@ -915,16 +967,18 @@ function AppContent() {
                   </button>
                 </div>
               )}
-            </div>
+            </Reveal>
           </section>
         )}
 
         {/* SEARCH PAGE */}
         {page === "search" && (
           <section className="inner-page search-page">
-            <span className="eyebrow">{t.search.eyebrow}</span>
-            <h1 className="page-title">{t.search.title}</h1>
-            <p className="page-subtitle">{t.search.subtitle}</p>
+            <PageHeader
+              eyebrow={t.search.eyebrow}
+              title={t.search.title}
+              subtitle={t.search.subtitle}
+            />
 
             <div className="search-page-input">
               <input
@@ -935,7 +989,7 @@ function AppContent() {
               />
             </div>
 
-            <div className="destination-grid">
+            <Reveal className="destination-grid" threshold={0.05}>
               {filteredDestinations.length > 0 ? (
                 filteredDestinations.map((item) => renderDestinationCard(item))
               ) : (
@@ -944,7 +998,7 @@ function AppContent() {
                   <p>{t.search.emptyDesc}</p>
                 </div>
               )}
-            </div>
+            </Reveal>
           </section>
         )}
 
@@ -975,17 +1029,19 @@ function AppContent() {
         {/* FOR YOU */}
         {page === "for-you" && (
           <section className="inner-page">
-            <span className="eyebrow">{t.forYou.eyebrow}</span>
-            <h1 className="page-title">{t.forYou.title}</h1>
-            <p className="page-subtitle">
-              {forYou.isPersonalized
-                ? t.forYou.subtitlePersonal
-                : t.forYou.subtitleDefault}
-            </p>
+            <PageHeader
+              eyebrow={t.forYou.eyebrow}
+              title={t.forYou.title}
+              subtitle={
+                forYou.isPersonalized
+                  ? t.forYou.subtitlePersonal
+                  : t.forYou.subtitleDefault
+              }
+            />
 
-            <div className="destination-grid compact-destination-grid">
+            <Reveal className="destination-grid compact-destination-grid" threshold={0.05}>
               {forYou.items.map((item) => renderDestinationCard(item))}
-            </div>
+            </Reveal>
           </section>
         )}
       </main>

@@ -4,6 +4,8 @@ import { divIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { destinations, type Destination } from "../data/destinations";
 import { useLanguage } from "../hooks/useLanguage";
+import PageHeader from "./PageHeader";
+import Reveal from "./Reveal";
 
 const PAGE_SIZE = 8;
 
@@ -28,10 +30,14 @@ export default function MapPage({ onOpen, renderCard }: MapPageProps) {
 
   return (
     <section className="inner-page">
-      <span className="eyebrow">{t.map.eyebrow}</span>
-      <h1 className="page-title">{t.map.title}</h1>
-      <p className="page-subtitle">{t.map.subtitle}</p>
+      <PageHeader
+        eyebrow={t.map.eyebrow}
+        title={t.map.title}
+        subtitle={t.map.subtitle}
+      />
 
+      {/* Peta hanya fade (tanpa geser) agar Leaflet tidak terganggu */}
+      <Reveal direction="none" delay={200}>
       <MapContainer
         center={[-2.5, 118]}
         zoom={5}
@@ -57,11 +63,12 @@ export default function MapPage({ onOpen, renderCard }: MapPageProps) {
           </Marker>
         ))}
       </MapContainer>
+      </Reveal>
 
       {/* Kartu dimuat bertahap supaya halaman tetap ringan */}
-      <div className="destination-grid map-list">
+      <Reveal className="destination-grid map-list" threshold={0.05}>
         {visibleDestinations.map((item) => renderCard(item))}
-      </div>
+      </Reveal>
 
       {hasMore && (
         <div className="map-load-more">

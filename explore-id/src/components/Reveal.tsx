@@ -54,6 +54,8 @@ type RevealProps = {
   className?: string;
   delay?: number;
   direction?: "up" | "left" | "right" | "none";
+  // Seberapa bagian elemen harus terlihat sebelum animasi mulai (0-1).
+  threshold?: number;
   id?: string;
   style?: CSSProperties;
   children?: ReactNode;
@@ -65,11 +67,12 @@ export default function Reveal({
   className = "",
   delay = 0,
   direction = "up",
+  threshold = 0.12,
   id,
   style,
   children,
 }: RevealProps) {
-  const { ref, inView } = useInView<HTMLElement>(0.12);
+  const { ref, inView } = useInView<HTMLElement>(threshold);
 
   return (
     <Tag
