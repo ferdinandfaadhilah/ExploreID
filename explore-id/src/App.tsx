@@ -12,6 +12,12 @@ import DestinationCard from "./components/DestinationCard";
 import DestinationDetail from "./components/DestinationDetail";
 import MapPage from "./components/MapPage";
 import SettingsPage from "./components/SettingsPage";
+import IndonesiaPinMap from "./components/IndonesiaPinMap";
+import Reveal from "./components/Reveal";
+import ScribbleUnderline, {
+  ScribbleBurst,
+} from "./components/ScribbleUnderline";
+import StatsBar from "./components/StatsBar";
 import { useAppearance } from "./hooks/useAppearance";
 import { useLanguage } from "./hooks/useLanguage";
 import { usePersistedBoolean } from "./hooks/usePersistedBoolean";
@@ -598,25 +604,33 @@ function AppContent() {
                     fontWeight: 800,
                   }}
                 >
-                  <span className="hero-interactive-word" aria-hidden="true">
-                    {Array.from(t.hero.wordTop).map((letter, index) => (
-                      <span className="hero-title-letter" key={`top-${index}`}>
-                        {letter}
-                      </span>
-                    ))}
+                  <span className="hero-scribble-wrap">
+                    <span className="hero-interactive-word" aria-hidden="true">
+                      {Array.from(t.hero.wordTop).map((letter, index) => (
+                        <span className="hero-title-letter" key={`top-${index}`}>
+                          {letter}
+                        </span>
+                      ))}
+                    </span>
+
+                    <ScribbleBurst delay={700} />
                   </span>
 
                   <br />
 
-                  <span className="hero-interactive-word" aria-hidden="true">
-                    {Array.from(t.hero.wordBottom).map((letter, index) => (
-                      <span
-                        className="hero-title-letter"
-                        key={`bottom-${index}`}
-                      >
-                        {letter}
-                      </span>
-                    ))}
+                  <span className="hero-scribble-wrap">
+                    <span className="hero-interactive-word" aria-hidden="true">
+                      {Array.from(t.hero.wordBottom).map((letter, index) => (
+                        <span
+                          className="hero-title-letter"
+                          key={`bottom-${index}`}
+                        >
+                          {letter}
+                        </span>
+                      ))}
+                    </span>
+
+                    <ScribbleUnderline delay={1000} />
                   </span>
                 </h1>
 
@@ -654,8 +668,12 @@ function AppContent() {
               </div>
             </section>
 
+            {/* STATS */}
+            <StatsBar />
+
             {/* HOME INTRODUCTION */}
-            <section
+            <Reveal
+              as="section"
               className="explore-section home-intro-section"
               id="home-introduction"
               style={{ paddingTop: "72px", paddingBottom: "76px" }}
@@ -674,11 +692,18 @@ function AppContent() {
                   <h2
                     style={{
                       maxWidth: "900px",
-                      margin: "18px 0 20px",
+                      margin: "18px 0 38px",
                       lineHeight: 1.15,
                     }}
                   >
-                    {homeWelcome.introTitle}
+                    <span className="scribble-heading-wrap">
+                      {homeWelcome.introTitle}
+
+                      <ScribbleUnderline
+                        className="scribble-heading"
+                        delay={200}
+                      />
+                    </span>
                   </h2>
 
                   {/* Warna teks diatur lewat CSS (.home-intro-copy) agar ikut dark mode */}
@@ -691,19 +716,24 @@ function AppContent() {
                     }}
                   >
                     {t.home.introParagraphs.map((paragraph, index, all) => (
-                      <p
+                      <Reveal
+                        as="p"
                         key={index}
+                        delay={index * 90}
                         style={{
                           margin: index === all.length - 1 ? "0" : "0 0 14px",
                         }}
                       >
                         {paragraph}
-                      </p>
+                      </Reveal>
                     ))}
                   </div>
                 </div>
               </div>
-            </section>
+            </Reveal>
+
+            {/* PETA TITIK DENGAN PIN FOTO */}
+            <IndonesiaPinMap onOpen={openDetail} />
 
             {/* EXPLORE CATALOG */}
             <section
@@ -774,7 +804,11 @@ function AppContent() {
               {filteredDestinations.length > 0 ? (
                 <div className="explore-category-list">
                   {exploreSections.map((section, index) => (
-                    <section className="explore-category-section" key={section.key}>
+                    <Reveal
+                      as="section"
+                      className="explore-category-section"
+                      key={section.key}
+                    >
                       <div className="explore-category-heading">
                         <div>
                           <span className="eyebrow">
@@ -796,7 +830,7 @@ function AppContent() {
                           )}
                         </div>
                       </div>
-                    </section>
+                    </Reveal>
                   ))}
                 </div>
               ) : (

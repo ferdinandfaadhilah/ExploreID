@@ -1,5 +1,6 @@
 import type { Destination } from "../data/destinations";
 import { useLanguage } from "../hooks/useLanguage";
+import Reveal from "./Reveal";
 import { useWeather } from "../hooks/useWeather";
 import { getWeatherCondition, getWeatherIcon } from "../lib/weather";
 
@@ -12,7 +13,7 @@ export default function WeatherSection({
   const { weather, loading, hasError, retry } = useWeather(destination);
 
   return (
-    <section className="weather-section">
+    <Reveal as="section" className="weather-section">
       <div className="weather-heading">
         <div>
           <span className="eyebrow">{t.weather.eyebrow}</span>
@@ -83,6 +84,6 @@ export default function WeatherSection({
           <p className="weather-source">{t.weather.source}</p>
         </div>
       )}
-    </section>
+    </Reveal>
   );
 }

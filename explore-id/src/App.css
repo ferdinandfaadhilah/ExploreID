@@ -3659,3 +3659,409 @@ html[data-theme="dark"] .home-intro-copy p {
   color: var(--muted);
   font-size: 12px;
 }
+
+
+/* =========================================
+   EFEK ANIMASI
+   (muncul saat scroll, coretan tangan, bar statistik, peta pin)
+========================================= */
+
+/* ---------- Muncul pelan saat di-scroll ---------- */
+.reveal {
+  opacity: 0;
+  transition:
+    opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-up { transform: translateY(38px); }
+.reveal-left { transform: translateX(-44px); }
+.reveal-right { transform: translateX(44px); }
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+/* Kartu di dalam section muncul bergiliran */
+.reveal.is-visible .explore-horizontal-track .destination-card {
+  animation: card-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.reveal.is-visible .explore-horizontal-track .destination-card:nth-child(2) { animation-delay: 0.08s; }
+.reveal.is-visible .explore-horizontal-track .destination-card:nth-child(3) { animation-delay: 0.16s; }
+.reveal.is-visible .explore-horizontal-track .destination-card:nth-child(4) { animation-delay: 0.24s; }
+.reveal.is-visible .explore-horizontal-track .destination-card:nth-child(5) { animation-delay: 0.32s; }
+.reveal.is-visible .explore-horizontal-track .destination-card:nth-child(6) { animation-delay: 0.4s; }
+.reveal.is-visible .explore-horizontal-track .destination-card:nth-child(n + 7) { animation-delay: 0.48s; }
+
+@keyframes card-rise {
+  from { opacity: 0; transform: translateY(34px) scale(0.97); }
+}
+
+/* Kartu rekomendasi di hero masuk satu per satu */
+.hero-destination-card {
+  animation: rail-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.hero-destination-card:nth-child(1) { animation-delay: 0.9s; }
+.hero-destination-card:nth-child(2) { animation-delay: 0.98s; }
+.hero-destination-card:nth-child(3) { animation-delay: 1.06s; }
+.hero-destination-card:nth-child(4) { animation-delay: 1.14s; }
+.hero-destination-card:nth-child(5) { animation-delay: 1.22s; }
+.hero-destination-card:nth-child(6) { animation-delay: 1.3s; }
+.hero-destination-card:nth-child(n + 7) { animation-delay: 1.4s; }
+
+@keyframes rail-in {
+  from { opacity: 0; transform: translateY(40px); }
+}
+
+/* ---------- Coretan tangan ---------- */
+.scribble {
+  overflow: visible;
+  pointer-events: none;
+}
+
+.scribble path {
+  fill: none;
+  stroke: var(--scribble-color, var(--gold));
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.scribble.is-drawn path {
+  animation: scribble-draw 1.1s cubic-bezier(0.65, 0, 0.35, 1)
+    var(--scribble-delay, 0ms) forwards;
+}
+
+.scribble-burst.is-drawn path:nth-child(2) { animation-delay: calc(var(--scribble-delay, 0ms) + 140ms); }
+.scribble-burst.is-drawn path:nth-child(3) { animation-delay: calc(var(--scribble-delay, 0ms) + 280ms); }
+
+@keyframes scribble-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Judul hero: garis bawah + kilau */
+.hero-scribble-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.hero-scribble-wrap .scribble-underline {
+  --scribble-color: #f3c98b;
+  position: absolute;
+  top: 100%;
+  left: 1%;
+  width: 98%;
+  height: auto;
+}
+
+.hero-scribble-wrap .scribble-burst {
+  --scribble-color: #f3c98b;
+  position: absolute;
+  top: -0.2em;
+  right: -0.5em;
+  width: 0.5em;
+  height: auto;
+}
+
+.scribble-underline path {
+  stroke-width: 4.5;
+}
+
+/* Garis di bawah judul section: selebar teks, tepat di bawah huruf */
+.scribble-heading-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.scribble-heading {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  height: auto;
+}
+
+.scribble-heading path {
+  stroke-width: 4;
+}
+
+html[data-theme="dark"] .scribble-heading {
+  --scribble-color: #8fb4c8;
+}
+
+/* ---------- Bar statistik ---------- */
+.stats-band {
+  overflow: hidden;
+  background: var(--background);
+}
+
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 38px 7%;
+  background: #365365;
+  color: #ffffff;
+  opacity: 0;
+  transform: translateY(100%);
+  transition:
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.6s ease;
+}
+
+.stats-bar.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.stats-item {
+  position: relative;
+  text-align: center;
+}
+
+.stats-item + .stats-item::before {
+  content: "";
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  left: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.stats-item strong {
+  display: block;
+  font-size: clamp(2rem, 4.6vw, 3.3rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.stats-item span {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.82;
+}
+
+html[data-theme="dark"] .stats-bar {
+  background: #223543;
+  border-top: 1px solid var(--border);
+}
+
+/* ---------- Peta titik dengan pin foto ---------- */
+.pin-map-head {
+  display: block;
+  max-width: 1240px;
+  margin: 0 auto clamp(56px, 7.5vw, 100px);
+}
+
+.pin-map {
+  position: relative;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  aspect-ratio: 944 / 384;
+}
+
+.pin-map-dots {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.pin-map-dots circle {
+  fill: #c3d4de;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.pin-map.is-visible .pin-map-dots circle {
+  opacity: 1;
+}
+
+html[data-theme="dark"] .pin-map-dots circle {
+  fill: #33495a;
+}
+
+.map-pin {
+  --pin: clamp(26px, 3.6vw, 48px);
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transform: translate(-50%, -100%);
+}
+
+.map-pin.is-active,
+.map-pin:hover,
+.map-pin:focus-visible {
+  z-index: 6;
+}
+
+.map-pin-float {
+  display: block;
+  animation: pin-float 4.2s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -0.7s);
+}
+
+.map-pin-photo {
+  display: block;
+  width: var(--pin);
+  height: var(--pin);
+  overflow: hidden;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: #dfe9ef;
+  box-shadow: 0 10px 24px rgba(20, 40, 55, 0.28);
+  transform-origin: 50% 100%;
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.45s ease;
+}
+
+.map-pin-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.map-pin.is-active .map-pin-photo,
+.map-pin:hover .map-pin-photo,
+.map-pin:focus-visible .map-pin-photo {
+  transform: scale(1.6);
+  box-shadow: 0 16px 34px rgba(20, 40, 55, 0.38);
+}
+
+.map-pin-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: #e8833a;
+  animation: pin-pulse 2.4s ease-out infinite;
+}
+
+.map-pin-label {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  width: max-content;
+  min-width: 150px;
+  max-width: 220px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--background);
+  color: var(--text);
+  text-align: left;
+  box-shadow: 0 14px 34px rgba(20, 40, 55, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.map-pin-label strong {
+  display: block;
+  font-size: 14px;
+}
+
+.map-pin-label small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.map-pin-label em {
+  display: block;
+  margin-top: 6px;
+  color: var(--gold);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.map-pin.is-active .map-pin-label,
+.map-pin:hover .map-pin-label,
+.map-pin:focus-visible .map-pin-label {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.map-pin.align-left .map-pin-label { left: 0; transform: translate(0, -6px); }
+.map-pin.align-left.is-active .map-pin-label,
+.map-pin.align-left:hover .map-pin-label { transform: none; }
+
+.map-pin.align-right .map-pin-label { right: 0; left: auto; transform: translate(0, -6px); }
+.map-pin.align-right.is-active .map-pin-label,
+.map-pin.align-right:hover .map-pin-label { transform: none; }
+
+@keyframes pin-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes pin-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(232, 131, 58, 0.5); }
+  100% { box-shadow: 0 0 0 12px rgba(232, 131, 58, 0); }
+}
+
+@media (max-width: 640px) {
+  .stats-bar { padding: 28px 5%; }
+  .stats-item span { font-size: 10px; letter-spacing: 0.1em; }
+  .map-pin { --pin: 22px; }
+  .map-pin-photo { border-width: 2px; }
+  .map-pin.is-active .map-pin-photo { transform: scale(1.5); }
+  .map-pin-label { min-width: 130px; }
+}
+
+/* ---------- Hormati pengaturan "kurangi gerakan" ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-up,
+  .reveal-left,
+  .reveal-right {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .reveal.is-visible .explore-horizontal-track .destination-card,
+  .hero-destination-card,
+  .map-pin-float,
+  .map-pin-dot {
+    animation: none !important;
+  }
+
+  .scribble path {
+    stroke-dashoffset: 0;
+    animation: none !important;
+  }
+
+  .stats-bar {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .pin-map-dots circle {
+    opacity: 1;
+    transition: none;
+  }
+}

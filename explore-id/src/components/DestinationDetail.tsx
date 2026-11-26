@@ -10,6 +10,7 @@ import { useLanguage } from "../hooks/useLanguage";
 import { calculateDistance } from "../lib/geo";
 import type { AppUser } from "../types";
 import DestinationGallery from "./DestinationGallery";
+import Reveal from "./Reveal";
 import ReviewsSection from "./ReviewsSection";
 import TravelGuide from "./TravelGuide";
 import WeatherSection from "./WeatherSection";
@@ -120,7 +121,7 @@ export default function DestinationDetail({
       </div>
 
       {/* DESTINATION OVERVIEW */}
-      <section className="destination-info-section">
+      <Reveal as="section" className="destination-info-section">
         <div className="section-top">
           <div>
             <span className="eyebrow">{t.detail.overviewEyebrow}</span>
@@ -178,11 +179,11 @@ export default function DestinationDetail({
             {t.detail.viewOnMaps}
           </a>
         </div>
-      </section>
+      </Reveal>
 
       {/* TICKET INFORMATION */}
       {hasTicketInfo && ticketInfo && (
-        <section className="ticket-information-section">
+        <Reveal as="section" className="ticket-information-section">
           <div className="section-top">
             <div>
               <span className="eyebrow">{t.ticket.eyebrow}</span>
@@ -217,7 +218,7 @@ export default function DestinationDetail({
               <p className="ticket-unavailable">{t.ticket.disclaimer}</p>
             </div>
           </div>
-        </section>
+        </Reveal>
       )}
 
       {/* TRAVEL GUIDE */}
@@ -231,7 +232,7 @@ export default function DestinationDetail({
       </div>
 
       {/* NEARBY DESTINATIONS */}
-      <section className="nearby-section">
+      <Reveal as="section" className="nearby-section">
         <div className="section-top">
           <div>
             <span className="eyebrow">{t.nearby.eyebrow}</span>
@@ -270,7 +271,7 @@ export default function DestinationDetail({
             </article>
           ))}
         </div>
-      </section>
+      </Reveal>
 
       <WeatherSection destination={destination} />
 

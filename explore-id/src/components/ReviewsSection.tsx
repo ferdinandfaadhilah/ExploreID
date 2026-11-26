@@ -1,4 +1,5 @@
 import { useLanguage } from "../hooks/useLanguage";
+import Reveal from "./Reveal";
 import { useReviews } from "../hooks/useReviews";
 import type { AppUser } from "../types";
 
@@ -33,7 +34,7 @@ export default function ReviewsSection({
   const roundedAverage = Math.round(averageRating);
 
   return (
-    <section className="reviews-section">
+    <Reveal as="section" className="reviews-section">
       <div className="section-top">
         <div>
           <span className="eyebrow">{r.eyebrow}</span>
@@ -152,6 +153,6 @@ export default function ReviewsSection({
           <div className="empty-review">{r.empty}</div>
         )}
       </div>
-    </section>
+    </Reveal>
   );
 }
