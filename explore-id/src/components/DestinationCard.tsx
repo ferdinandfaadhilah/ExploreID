@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Destination } from "../data/destinations";
 import { useLanguage } from "../hooks/useLanguage";
 
@@ -6,6 +7,9 @@ type DestinationCardProps = {
   saved: boolean;
   onOpen: (item: Destination) => void;
   onToggleFavorite: (id: number) => void;
+  // Badge kecil di pojok kiri atas gambar (mis. estimasi waktu tempuh).
+  badge?: ReactNode;
+  selected?: boolean;
 };
 
 export default function DestinationCard({
@@ -13,11 +17,13 @@ export default function DestinationCard({
   saved,
   onOpen,
   onToggleFavorite,
+  badge,
+  selected = false,
 }: DestinationCardProps) {
   const { t } = useLanguage();
 
   return (
-    <article className="destination-card">
+    <article className={`destination-card ${selected ? "is-selected" : ""}`}>
       <div className="card-image">
         {/* GAMBAR BISA DIKLIK */}
         <button
@@ -44,6 +50,8 @@ export default function DestinationCard({
             </div>
           </div>
         </div>
+
+        {badge && <span className="card-travel-badge">{badge}</span>}
 
         {/* FAVORITE */}
         <button

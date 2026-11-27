@@ -1023,7 +1023,11 @@ function AppContent() {
 
         {/* MAP */}
         {page === "map" && (
-          <MapPage onOpen={openDetail} renderCard={renderDestinationCard} />
+          <MapPage
+            onOpen={openDetail}
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+          />
         )}
 
         {/* FOR YOU */}

@@ -4497,3 +4497,457 @@ html[data-theme="dark"] .pin-map-dots circle {
     transform: translateX(-30%);
   }
 }
+
+
+/* =========================================
+   PETA: estimasi waktu tempuh
+========================================= */
+
+/* ---------- Control bar ---------- */
+.travel-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px 24px;
+  align-items: center;
+  margin: 8px 0 22px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--background);
+  box-shadow: var(--shadow);
+}
+
+.travel-origin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.travel-locate {
+  padding: 11px 17px;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
+}
+
+.travel-locate:hover:not(:disabled),
+.travel-locate.is-active {
+  background: var(--gold);
+  color: #ffffff;
+}
+
+.travel-locate:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.travel-city {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.travel-city select {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--background);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.travel-modes {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  border-radius: 999px;
+  background: rgba(69, 100, 119, 0.1);
+}
+
+.travel-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.travel-mode:hover {
+  background: rgba(69, 100, 119, 0.16);
+}
+
+.travel-mode.is-active {
+  background: var(--gold);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(69, 100, 119, 0.3);
+}
+
+.travel-status {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.travel-status small {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.travel-status.is-ok::before {
+  content: "✓ ";
+  color: #23966c;
+  font-weight: 800;
+}
+
+.travel-status.is-error {
+  color: #c0503c;
+}
+
+/* ---------- Peta & panel info ---------- */
+.map-stage {
+  position: relative;
+  isolation: isolate;
+}
+
+.map-hint {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  z-index: 1100;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(20, 32, 43, 0.84);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: hint-in 0.6s ease 0.6s backwards;
+}
+
+@keyframes hint-in {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+}
+
+.map-info-panel {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1200;
+  width: 330px;
+  max-height: calc(100% - 32px);
+  padding: 22px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--background);
+  color: var(--text);
+  box-shadow: 0 24px 56px rgba(20, 40, 55, 0.3);
+  animation: panel-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes panel-in {
+  from { opacity: 0; transform: translateX(26px); }
+}
+
+.map-info-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.map-info-close:hover {
+  background: rgba(69, 100, 119, 0.14);
+}
+
+.map-info-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(35, 150, 108, 0.14);
+  color: #23966c;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.map-info-panel h3 {
+  margin: 12px 36px 4px 0;
+  color: var(--navy);
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.map-info-location {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.map-info-eta {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(69, 100, 119, 0.09);
+}
+
+.map-info-eta small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.map-info-eta-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-top: 6px;
+}
+
+.map-info-eta-main strong {
+  color: var(--navy);
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+
+.map-info-eta-main span {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.map-info-eta em {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.map-info-eta p {
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.map-info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.map-info-row span {
+  color: var(--muted);
+}
+
+.map-info-row strong {
+  text-align: right;
+}
+
+.map-info-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.map-info-actions .primary-button {
+  width: 100%;
+  margin-top: 0;
+}
+
+.map-info-nav {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  transition: background 0.25s ease;
+}
+
+.map-info-nav:hover {
+  background: rgba(69, 100, 119, 0.1);
+}
+
+/* Titik berangkat di peta */
+.origin-dot {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: #2d7ff9;
+  box-shadow: 0 0 0 0 rgba(45, 127, 249, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
+  animation: origin-pulse 2s ease-out infinite;
+}
+
+@keyframes origin-pulse {
+  to { box-shadow: 0 0 0 16px rgba(45, 127, 249, 0), 0 2px 8px rgba(0, 0, 0, 0.35); }
+}
+
+/* ---------- Badge durasi di kartu ---------- */
+.card-travel-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: rgba(20, 32, 43, 0.84);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  pointer-events: none;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  animation: badge-pop 0.35s ease backwards;
+}
+
+@keyframes badge-pop {
+  from { opacity: 0; transform: scale(0.85); }
+}
+
+.destination-card.is-selected .card-image {
+  outline: 3px solid #e8833a;
+  outline-offset: 3px;
+}
+
+/* ---------- Responsif ---------- */
+@media (max-width: 860px) {
+  .travel-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .travel-modes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    border-radius: 18px;
+  }
+
+  .travel-mode {
+    justify-content: center;
+  }
+
+  /* Di HP panel diletakkan di bawah peta agar peta tetap terlihat penuh */
+  .map-info-panel {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    z-index: auto;
+    width: auto;
+    max-height: none;
+    margin-top: 14px;
+    padding: 18px;
+    box-shadow: 0 12px 30px rgba(20, 40, 55, 0.16);
+  }
+
+  .map-hint {
+    max-width: 90%;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .origin-dot,
+  .map-info-panel,
+  .card-travel-badge,
+  .map-hint {
+    animation: none !important;
+  }
+}
+
+/* Margin peta dipindah ke pembungkus agar panel info selalu pas di dalam peta */
+.map-stage {
+  margin: 24px 0 30px;
+}
+
+.map-stage .map-container {
+  margin: 0;
+}
+
+
+/* Perbaikan responsif: aturan lama `.inner-page .destination-grid` (4 kolom)
+   lebih kuat dari aturan breakpoint, sehingga di tablet/HP kartu tetap 4 kolom. */
+@media (max-width: 1200px) {
+  .inner-page > .destination-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .inner-page > .destination-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 16px;
+  }
+}
+
+/* Halaman Peta punya aturan 4 kolom sendiri (.map-list), jadi dibatasi juga */
+@media (max-width: 1200px) {
+  .inner-page > .destination-grid.map-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .inner-page > .destination-grid.map-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Kartu sempit di HP: badge durasi diturunkan agar tidak menabrak tombol hati */
+@media (max-width: 640px) {
+  .card-travel-badge {
+    top: 58px;
+    left: 10px;
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+
+/* Dark mode: tombol aktif berlatar biru muda, jadi teksnya digelapkan agar kontras */
+html[data-theme="dark"] .travel-mode.is-active,
+html[data-theme="dark"] .travel-locate.is-active,
+html[data-theme="dark"] .travel-locate:hover:not(:disabled) {
+  color: #0f1a24;
+}
