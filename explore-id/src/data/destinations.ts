@@ -27,7 +27,7 @@ export const destinations: Destination[] = [
     description: "Danau kawah dengan pemandangan alam yang unik dan menawan.",
     price: "Mulai Rp28.000",
     budget: 28000,
-    image: "https://images.unsplash.com/photo-1511497584788-876760111969?w=1000",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Kawah_Putih.jpg",
     position: [-7.166, 107.402],
   },
   {
@@ -38,7 +38,7 @@ export const destinations: Destination[] = [
     description: "Destinasi bersejarah dengan arsitektur dan nilai budaya yang luar biasa.",
     price: "Mulai Rp50.000",
     budget: 50000,
-    image: "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=1000",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/CANDI_BOROBUDUR.jpg",
     position: [-7.6079, 110.2038],
   },
   {
@@ -49,7 +49,7 @@ export const destinations: Destination[] = [
     description: "Kawasan populer untuk menikmati kuliner, belanja, dan suasana khas Yogyakarta.",
     price: "Gratis",
     budget: 0,
-    image: "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=1000",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Malioboro_Street.jpg",
     position: [-7.7925, 110.3656],
   },
   {
@@ -60,7 +60,7 @@ export const destinations: Destination[] = [
     description: "Pulau dengan pantai, alam, budaya, dan pengalaman wisata yang beragam.",
     price: "Bervariasi",
     budget: 500000,
-    image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1000",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Bali%2C_Indonesia.jpg",
     position: [-8.4095, 115.1889],
   },
   {
@@ -71,7 +71,7 @@ export const destinations: Destination[] = [
     description: "Nikmati panorama pegunungan dan pemandangan matahari terbit.",
     price: "Bervariasi",
     budget: 150000,
-    image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1000",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Mt._Bromo.jpg",
     position: [-7.9425, 112.953],
   },
   {
@@ -93,7 +93,7 @@ export const destinations: Destination[] = [
     description: "Danau vulkanik luas dengan panorama perbukitan dan Pulau Samosir.",
     price: "Bervariasi",
     budget: 150000,
-    image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1000",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Foto_Danau_Toba.jpg",
     position: [2.6845, 98.8756],
   },
   {
@@ -428,7 +428,7 @@ const additionalDestinations: Destination[] = [
     id: 41, name: "Taman Nasional Bromo Tengger Semeru", location: "Jawa Timur",
     category: "Adventure", description: "Kawasan pegunungan dengan lautan pasir dan panorama gunung.",
     price: "Bervariasi", budget: 150000,
-    image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1000",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Mt._Bromo.jpg",
     position: [-8.016, 112.95]
   },
   {
@@ -1088,7 +1088,7 @@ const additionalDestinations: Destination[] = [
     id: 132, name: "Danau Toba", location: "Samosir, Sumatera Utara",
     category: "Nature", description: "Danau vulkanik luas dengan pemandangan perbukitan dan Pulau Samosir.",
     price: "Bervariasi", budget: 50000,
-    image: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=1000",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Foto_Danau_Toba.jpg",
     position: [2.68, 98.87]
   },
   {
@@ -1165,7 +1165,7 @@ const additionalDestinations: Destination[] = [
     id: 143, name: "Candi Borobudur", location: "Magelang, Jawa Tengah",
     category: "History", description: "Candi Buddha bersejarah dengan relief dan struktur bangunan yang megah.",
     price: "Bervariasi", budget: 50000,
-    image: "https://images.unsplash.com/photo-1606293926075-69a00dbfde81?w=1000",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/CANDI_BOROBUDUR.jpg",
     position: [-7.607, 110.204]
   },
   {
@@ -1186,7 +1186,7 @@ const additionalDestinations: Destination[] = [
     id: 146, name: "Gunung Bromo", location: "Probolinggo, Jawa Timur",
     category: "Adventure", description: "Gunung berapi dengan panorama lautan pasir dan pegunungan.",
     price: "Bervariasi", budget: 100000,
-    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1000",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Mt._Bromo.jpg",
     position: [-7.94, 112.95]
   },
   {
