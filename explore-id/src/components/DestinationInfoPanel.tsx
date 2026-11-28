@@ -6,6 +6,7 @@ import {
   MODE_LABELS,
   formatDistance,
   formatDuration,
+  googleNavigationUrl,
   type OriginState,
   type TravelMode,
   type TripEstimate,
@@ -40,13 +41,6 @@ const COPY = {
   },
 };
 
-const GOOGLE_MODE: Record<TravelMode, string> = {
-  motor: "two-wheeler",
-  car: "driving",
-  transit: "transit",
-  walk: "walking",
-};
-
 type DestinationInfoPanelProps = {
   destination: Destination;
   estimate: TripEstimate | null;
@@ -71,13 +65,7 @@ export default function DestinationInfoPanel({
   const ticket =
     ticketInformation[destination.id]?.ticketPrice?.trim() || destination.price;
 
-  const [destLat, destLng] = destination.position;
-
-  const navigationUrl =
-    `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}` +
-    (origin
-      ? `&origin=${origin.coords[0]},${origin.coords[1]}&travelmode=${GOOGLE_MODE[mode]}`
-      : "");
+  const navigationUrl = googleNavigationUrl(destination.position, origin, mode);
 
   return (
     <aside className="map-info-panel" aria-live="polite">

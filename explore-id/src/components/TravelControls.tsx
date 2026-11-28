@@ -47,6 +47,8 @@ type TravelControlsProps = {
   status: LocateStatus;
   onLocate: () => void;
   onCityChange: (cityId: string) => void;
+  // false = tombol kendaraan disembunyikan (dipilih lewat kartu lain).
+  showModes?: boolean;
 };
 
 // Control bar di atas peta: titik berangkat + pilihan kendaraan.
@@ -57,6 +59,7 @@ export default function TravelControls({
   status,
   onLocate,
   onCityChange,
+  showModes = true,
 }: TravelControlsProps) {
   const { language } = useLanguage();
   const copy = COPY[language];
@@ -71,7 +74,7 @@ export default function TravelControls({
   else if (origin) statusText = copy.fromCity(origin.label);
 
   return (
-    <div className="travel-bar">
+    <div className={`travel-bar ${showModes ? "" : "no-modes"}`}>
       <div className="travel-origin">
         <button
           type="button"
@@ -102,6 +105,7 @@ export default function TravelControls({
         </label>
       </div>
 
+      {showModes && (
       <div className="travel-modes" role="group" aria-label={copy.modeLabel}>
         {TRAVEL_MODES.map((item) => (
           <button
@@ -116,6 +120,7 @@ export default function TravelControls({
           </button>
         ))}
       </div>
+      )}
 
       <p className={`travel-status ${hasError ? "is-error" : origin ? "is-ok" : ""}`}>
         {statusText}

@@ -4951,3 +4951,697 @@ html[data-theme="dark"] .travel-locate.is-active,
 html[data-theme="dark"] .travel-locate:hover:not(:disabled) {
   color: #0f1a24;
 }
+
+
+/* =========================================
+   REFERENSI "MENTION": bola 3D, garis scroll,
+   galeri melengkung, penutup bola jatuh
+========================================= */
+
+/* ---------- Perbaikan ukuran teks: kalah specificity dari `.inner-page p` ---------- */
+.travel-bar .travel-status {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.travel-bar .travel-status small {
+  font-size: 12px;
+}
+
+.map-info-panel .map-info-location {
+  margin: 0 0 16px;
+  font-size: 13px;
+}
+
+.map-info-panel .map-info-eta p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ---------- Bola 3D (kanvas) ---------- */
+.ball-pit {
+  display: block;
+  pointer-events: none;
+}
+
+/* ---------- Judul halaman: tipografi besar ---------- */
+.page-hero .page-title {
+  font-size: clamp(2.6rem, 6.4vw, 5.4rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+/* ---------- Galeri melengkung ---------- */
+.curved-gallery-section {
+  overflow: hidden;
+}
+
+.curved-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.curved-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.curved-head h2 {
+  margin: 14px 0 0;
+  color: var(--navy);
+  font-size: clamp(1.8rem, 3.4vw, 2.8rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.curved-hint {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.curved-viewport {
+  position: relative;
+  width: 100vw;
+  height: 450px;
+  margin-top: 28px;
+  margin-left: calc(50% - 50vw);
+  overflow: hidden;
+  perspective: 1100px;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.curved-viewport:active {
+  cursor: grabbing;
+}
+
+.curved-card {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  width: clamp(190px, 22vw, 270px);
+  height: 390px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 22px;
+  background: #dfe9ef;
+  box-shadow: 0 24px 50px rgba(20, 40, 55, 0.28);
+  cursor: inherit;
+  will-change: transform;
+}
+
+.curved-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.curved-card-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 45%, rgba(10, 20, 30, 0.78));
+}
+
+.curved-card-meta {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  left: 18px;
+  color: #ffffff;
+  text-align: left;
+}
+
+.curved-card-meta small {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.curved-card-meta strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+.curved-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px 14px;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.curved-caption strong {
+  color: var(--navy);
+  font-size: 16px;
+}
+
+.curved-caption span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.curved-caption small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+@media (max-width: 640px) {
+  .curved-viewport { height: 400px; }
+  .curved-card { height: 340px; width: 62vw; }
+  .curved-hint { display: none; }
+}
+
+/* ---------- Penutup halaman: bola hitam-putih jatuh menumpuk ---------- */
+/* Warna latar bisa diganti lewat 3 variabel --cta-1/2/3 di bawah ini. */
+.trip-cta {
+  --cta-1: #d4f1fd;
+  --cta-2: #8ed0ef;
+  --cta-3: #3f9dd2;
+  --cta-ink: #0b1b27;
+  position: relative;
+  min-height: clamp(560px, 70vw, 840px);
+  padding: clamp(60px, 8vw, 100px) 7% 0;
+  overflow: hidden;
+  color: var(--cta-ink);
+  text-align: center;
+  isolation: isolate;
+  background: linear-gradient(135deg, var(--cta-1) 0%, var(--cta-2) 48%, var(--cta-3) 100%);
+}
+
+/* Butiran halus (grain) */
+.trip-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.32;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Kilau diagonal yang bergeser pelan */
+.trip-cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 18%, rgba(255, 255, 255, 0.5) 36%, transparent 54%);
+  background-size: 220% 100%;
+  background-position: 0% 0;
+  animation: cta-sheen 11s ease-in-out infinite alternate;
+}
+
+@keyframes cta-sheen {
+  to { background-position: 100% 0; }
+}
+
+.trip-cta-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 38px 0 46px;
+  pointer-events: none;
+}
+
+.trip-cta-micro {
+  margin: 0 0 14px;
+  color: var(--cta-ink);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.trip-cta h2 {
+  margin: 0;
+  color: var(--cta-ink);
+  font-size: clamp(3.2rem, 10vw, 8.6rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+}
+
+/* Judul naik dari balik topeng saat masuk layar, garis bawah saat di-hover */
+.cta-line {
+  display: block;
+  /* Ruang ekstra di bawah agar ekor huruf (y, j, g) tidak terpotong topeng */
+  margin-bottom: -0.14em;
+  padding-bottom: 0.2em;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.cta-line > span {
+  display: block;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 90%;
+  background-size: 0 0.055em;
+  transform: translateY(112%);
+  filter: blur(10px);
+  transition:
+    transform 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+    background-size 0.55s ease;
+}
+
+.trip-cta.is-visible .cta-line > span {
+  transform: none;
+  filter: none;
+}
+
+.trip-cta.is-visible .cta-line:nth-child(2) > span {
+  transition-delay: 0.14s, 0.14s, 0s;
+}
+
+.cta-line:hover > span {
+  background-size: 100% 0.055em;
+}
+
+.ball-pit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
+
+.trip-cta-actions {
+  position: absolute;
+  right: 0;
+  bottom: clamp(22px, 4vw, 44px);
+  left: 0;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+}
+
+.cta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 30px;
+  border: 0;
+  border-radius: 999px;
+  background: #0b1217;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cta-pill:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(11, 18, 23, 0.4);
+}
+
+/* Tanda "+" mengapit judul */
+.cta-plus {
+  position: absolute;
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.cta-plus-a { top: 0; left: 0; }
+.cta-plus-b { top: 0; right: 0; }
+.cta-plus-c { bottom: 0; left: 0; }
+.cta-plus-d { right: 0; bottom: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .trip-cta::after { animation: none; }
+
+  .cta-line > span {
+    transform: none;
+    filter: none;
+    transition: background-size 0.3s ease;
+  }
+}
+
+/* ---------- Footer berkolom ---------- */
+.site-footer {
+  padding: 76px 7% 0;
+  background: #eef3f6;
+  color: var(--text);
+}
+
+html[data-theme="dark"] .site-footer {
+  background: #0e1822;
+}
+
+.site-footer-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1.3fr;
+  gap: 48px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.site-footer-logo {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--navy);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  cursor: pointer;
+}
+
+.site-footer-brand p,
+.site-footer-about p {
+  margin: 14px 0 8px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.site-footer-brand small {
+  color: var(--muted);
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.site-footer h4 {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.site-footer-about h4 + p {
+  margin-top: 0;
+}
+
+.site-footer-links ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-footer-links button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font-size: 15px;
+  cursor: pointer;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.site-footer-links button:hover {
+  color: var(--gold);
+  transform: translateX(5px);
+}
+
+.site-footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1240px;
+  margin: 56px auto 0;
+  padding: 24px 0 84px;
+  border-top: 1px solid var(--border);
+}
+
+.site-footer-bottom small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.to-top {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 50%;
+  background: #0b1217;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.to-top:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 28px rgba(11, 18, 23, 0.3);
+}
+
+html[data-theme="dark"] .to-top {
+  background: #e8eef3;
+  color: #0b1217;
+}
+
+@media (max-width: 860px) {
+  .site-footer-grid { grid-template-columns: 1fr; gap: 36px; }
+}
+
+/* ---------- Panel "halaman berikutnya" ---------- */
+.next-panel {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+  width: 100%;
+  min-height: clamp(300px, 36vw, 440px);
+  margin-top: -44px;
+  padding: 30px 7% 38px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 40px 40px 0 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.next-panel-dark {
+  background: #14202b;
+  color: #ffffff;
+}
+
+.next-panel-light {
+  background: linear-gradient(135deg, #d4f1fd, #8ed0ef);
+  color: #0b1b27;
+}
+
+.next-micro {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+.next-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.next-title {
+  font-size: clamp(4rem, 13vw, 11rem);
+  font-weight: 800;
+  line-height: 0.88;
+  letter-spacing: -0.055em;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.next-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.next-link i {
+  display: block;
+  width: 150px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.45;
+  transition: width 0.5s ease;
+}
+
+.next-link b {
+  font-size: 18px;
+  font-weight: 400;
+  transition: transform 0.4s ease;
+}
+
+@media (hover: hover) {
+  .next-panel:hover .next-title { transform: translateX(14px); }
+  .next-panel:hover .next-link i { width: 240px; }
+  .next-panel:hover .next-link b { transform: translateX(6px); }
+}
+
+@media (max-width: 640px) {
+  .next-link i { width: 60px; }
+}
+
+/* ---------- Estimasi perjalanan di halaman Destinasi ---------- */
+.travel-planner-section {
+  margin-top: 70px;
+}
+
+.travel-bar.no-modes {
+  grid-template-columns: 1fr;
+}
+
+.planner-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 22px;
+  margin: 6px 0 20px;
+}
+
+.planner-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-content: start;
+}
+
+.planner-mode {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--background);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+}
+
+@media (hover: hover) {
+  .planner-mode:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 34px rgba(38, 54, 74, 0.14);
+  }
+}
+
+.planner-mode.is-active {
+  border-color: var(--gold);
+  background: rgba(69, 100, 119, 0.1);
+  box-shadow: 0 0 0 2px var(--gold);
+}
+
+.planner-mode.is-blocked {
+  opacity: 0.72;
+}
+
+.planner-mode-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(69, 100, 119, 0.13);
+  font-size: 24px;
+}
+
+.planner-mode-body small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.planner-mode-body strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--navy);
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.planner-mode-body em {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.travel-planner-section .planner-hint {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.planner-map {
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  isolation: isolate;
+}
+
+.route-mini-map {
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+}
+
+.travel-planner-section .planner-note {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .planner-grid { grid-template-columns: 1fr; }
+  .planner-map, .route-mini-map { min-height: 300px; }
+}
+
+@media (max-width: 480px) {
+  .planner-modes { grid-template-columns: 1fr; }
+}
+
+/* ---------- Hormati "kurangi gerakan" ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .curved-card {
+    will-change: auto;
+  }
+}

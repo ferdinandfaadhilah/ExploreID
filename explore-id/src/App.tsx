@@ -21,6 +21,11 @@ import ScribbleUnderline, {
   ScribbleBurst,
 } from "./components/ScribbleUnderline";
 import StatsBar from "./components/StatsBar";
+import CurvedGallery from "./components/CurvedGallery";
+import EmptyState from "./components/EmptyState";
+import TripCta from "./components/TripCta";
+import NextPagePanel from "./components/NextPagePanel";
+import SiteFooter from "./components/SiteFooter";
 import { useAppearance } from "./hooks/useAppearance";
 import { useLanguage } from "./hooks/useLanguage";
 import { usePersistedBoolean } from "./hooks/usePersistedBoolean";
@@ -436,6 +441,21 @@ function AppContent() {
     }
   }
 
+  // Destinasi tambahan untuk galeri di halaman yang isinya sedikit.
+  function moreToExplore(excludeIds: number[]) {
+    const seen = new Set(excludeIds);
+
+    return [...recommendedHeroDestinations, ...destinations]
+      .filter((item) => {
+        if (seen.has(item.id)) return false;
+
+        seen.add(item.id);
+
+        return true;
+      })
+      .slice(0, 10);
+  }
+
   // DESTINATION CARD
   function renderDestinationCard(item: Destination) {
     return (
@@ -772,6 +792,9 @@ function AppContent() {
             {/* PETA TITIK DENGAN PIN FOTO */}
             <IndonesiaPinMap onOpen={openDetail} />
 
+            {/* GALERI MELENGKUNG */}
+            <CurvedGallery items={recommendedHeroDestinations} onOpen={openDetail} />
+
             {/* EXPLORE CATALOG */}
             <section
               id="explore-catalog"
@@ -923,20 +946,20 @@ function AppContent() {
               {favoriteDestinations.length > 0 ? (
                 favoriteDestinations.map((item) => renderDestinationCard(item))
               ) : (
-                <div className="empty-state">
-                  <div className="empty-heart">♡</div>
-                  <h3>{t.favorites.emptyTitle}</h3>
-                  <p>{t.favorites.emptyDesc}</p>
-
-                  <button
-                    className="primary-button"
-                    onClick={() => navigate("home")}
-                  >
-                    {t.favorites.cta}
-                  </button>
-                </div>
+                <EmptyState
+                  icon="♡"
+                  title={t.favorites.emptyTitle}
+                  desc={t.favorites.emptyDesc}
+                  cta={t.favorites.cta}
+                  onCta={() => navigate("home")}
+                />
               )}
             </Reveal>
+            <CurvedGallery
+              variant="more"
+              items={moreToExplore(favorites)}
+              onOpen={openDetail}
+            />
           </section>
         )}
 
@@ -955,19 +978,20 @@ function AppContent() {
                   renderDestinationCard(item)
                 )
               ) : (
-                <div className="empty-state">
-                  <h3>{t.recent.emptyTitle}</h3>
-                  <p>{t.recent.emptyDesc}</p>
-
-                  <button
-                    className="primary-button"
-                    onClick={() => navigate("home")}
-                  >
-                    {t.recent.cta}
-                  </button>
-                </div>
+                <EmptyState
+                  icon="🧭"
+                  title={t.recent.emptyTitle}
+                  desc={t.recent.emptyDesc}
+                  cta={t.recent.cta}
+                  onCta={() => navigate("home")}
+                />
               )}
             </Reveal>
+            <CurvedGallery
+              variant="more"
+              items={moreToExplore(recentlyViewed)}
+              onOpen={openDetail}
+            />
           </section>
         )}
 
@@ -1046,19 +1070,36 @@ function AppContent() {
             <Reveal className="destination-grid compact-destination-grid" threshold={0.05}>
               {forYou.items.map((item) => renderDestinationCard(item))}
             </Reveal>
+            <CurvedGallery
+              variant="more"
+              items={moreToExplore(forYou.items.map((item) => item.id))}
+              onOpen={openDetail}
+            />
           </section>
         )}
       </main>
 
-      <footer className="footer">
-        <button className="footer-logo" onClick={() => navigate("home")}>
-          ExploreID.
-        </button>
+      {/* Penutup halaman: bola-bola jatuh menumpuk */}
+      {["home", "favorites", "recently-viewed", "for-you", "map", "search"].includes(
+        page
+      ) && (
+        <TripCta
+          onContinue={() => {
+            const next = document.getElementById("next-page");
 
-        <p>{t.footer.tagline}</p>
+            if (next) {
+              next.scrollIntoView({ behavior: "smooth", block: "start" });
+            } else {
+              window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+            }
+          }}
+        />
+      )}
 
-        <small>{t.footer.copyright}</small>
-      </footer>
+      <SiteFooter onNavigate={navigate} />
+
+      {/* Menyambung ke halaman berikutnya */}
+      <NextPagePanel page={page} onGo={navigate} />
     </div>
   );
 }

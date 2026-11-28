@@ -344,3 +344,60 @@ export function useTravelOrigin() {
 
   return { origin, status, locate, chooseCity };
 }
+
+
+/* =========================================
+   Kendaraan terpilih (dipakai Peta & halaman Destinasi)
+========================================= */
+
+const MODE_KEY = "exploreid-travel-mode";
+
+function readSavedMode(): TravelMode {
+  try {
+    const saved = localStorage.getItem(MODE_KEY);
+
+    if (saved === "motor" || saved === "car" || saved === "transit" || saved === "walk") {
+      return saved;
+    }
+  } catch {
+    // Pakai default.
+  }
+
+  return "motor";
+}
+
+export function useTravelMode() {
+  const [mode, setModeState] = useState<TravelMode>(readSavedMode);
+
+  const setMode = useCallback((next: TravelMode) => {
+    setModeState(next);
+
+    try {
+      localStorage.setItem(MODE_KEY, next);
+    } catch {
+      // Abaikan jika penyimpanan gagal.
+    }
+  }, []);
+
+  return [mode, setMode] as const;
+}
+
+const GOOGLE_MODE: Record<TravelMode, string> = {
+  motor: "two-wheeler",
+  car: "driving",
+  transit: "transit",
+  walk: "walking",
+};
+
+export function googleNavigationUrl(
+  destination: Coordinates,
+  origin: OriginState | null,
+  mode: TravelMode
+) {
+  return (
+    `https://www.google.com/maps/dir/?api=1&destination=${destination[0]},${destination[1]}` +
+    (origin
+      ? `&origin=${origin.coords[0]},${origin.coords[1]}&travelmode=${GOOGLE_MODE[mode]}`
+      : "")
+  );
+}

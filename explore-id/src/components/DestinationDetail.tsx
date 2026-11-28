@@ -13,6 +13,7 @@ import DestinationGallery from "./DestinationGallery";
 import Reveal from "./Reveal";
 import ReviewsSection from "./ReviewsSection";
 import TravelGuide from "./TravelGuide";
+import TravelPlanner from "./TravelPlanner";
 import WeatherSection from "./WeatherSection";
 
 // Jumlah maksimal destinasi terdekat yang ditampilkan.
@@ -180,6 +181,9 @@ export default function DestinationDetail({
           </a>
         </div>
       </Reveal>
+
+      {/* ESTIMASI PERJALANAN */}
+      <TravelPlanner destination={destination} />
 
       {/* TICKET INFORMATION */}
       {hasTicketInfo && ticketInfo && (

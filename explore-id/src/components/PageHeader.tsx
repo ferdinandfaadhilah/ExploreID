@@ -6,14 +6,10 @@ type PageHeaderProps = {
   subtitle: string;
 };
 
-// Judul halaman yang muncul bertahap (eyebrow, judul, lalu subjudul).
-export default function PageHeader({
-  eyebrow,
-  title,
-  subtitle,
-}: PageHeaderProps) {
+// Judul halaman: tipografi besar dan teks yang muncul bertahap.
+export default function PageHeader({ eyebrow, title, subtitle }: PageHeaderProps) {
   return (
-    <>
+    <div className="page-hero">
       <Reveal as="span" className="eyebrow">
         {eyebrow}
       </Reveal>
@@ -25,6 +21,6 @@ export default function PageHeader({
       <Reveal as="p" className="page-subtitle" delay={160}>
         {subtitle}
       </Reveal>
-    </>
+    </div>
   );
 }
